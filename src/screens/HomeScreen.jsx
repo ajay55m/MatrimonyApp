@@ -133,7 +133,7 @@ const HomeScreen = ({ activeTab, onLoginPress, t }) => {
                 <View style={styles.glassAuthTab}>
                     <Text style={styles.authTabTitle}>{t('FREE_REGISTER')}</Text>
                     <View style={styles.authBtnRow}>
-                        <TouchableOpacity style={styles.authBtnWrapper}>
+                        <TouchableOpacity style={styles.authBtnWrapper} onPress={() => navigation.navigate('Register')}>
                             <LinearGradient
                                 colors={[COLORS.primaryGradientStart, COLORS.primaryGradientEnd]}
                                 style={styles.authBtnGradient}
@@ -332,7 +332,7 @@ const HomeScreen = ({ activeTab, onLoginPress, t }) => {
             </Text>
 
             <View style={styles.ctaButtons}>
-                <TouchableOpacity style={styles.ctaBtnWhite}>
+                <TouchableOpacity style={styles.ctaBtnWhite} onPress={() => navigation.navigate('Register')}>
                     <Icon name="account-plus" size={20} color={COLORS.primary} />
                     <Text style={styles.ctaBtnTextPrimary}>{t('REGISTER')}</Text>
                 </TouchableOpacity>

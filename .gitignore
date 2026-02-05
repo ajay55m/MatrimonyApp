@@ -16,3 +16,6 @@ ios/Pods/
 
 # misc
 .env
+# Android build files
+android/app/.cxx/
+android/local.properties
