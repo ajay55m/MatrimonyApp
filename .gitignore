@@ -19,3 +19,23 @@ ios/Pods/
 # Android build files
 android/app/.cxx/
 android/local.properties
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Metro / cache
+.expo/
+.metro-health-check*
+
+# Android
+android/.idea/
+android/*.iml
+
+# iOS
+ios/build/
+ios/*.xcworkspace
