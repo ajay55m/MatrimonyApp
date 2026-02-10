@@ -16,8 +16,10 @@ import { Picker } from '@react-native-picker/picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import { registerUser } from '../../services/authService';
 
 const { width, height } = Dimensions.get('window');
+
 
 // Enhanced Input Component with better styling
 const ModernInput = ({ label, value, onChangeText, placeholder, keyboardType = 'default', multiline = false, icon, secureTextEntry = false, rightIcon = null, onRightIconPress = null }) => (
@@ -189,9 +191,29 @@ const RegistrationScreen = ({ navigation }) => {
         }
     };
 
-    const handleSubmit = () => {
-        Alert.alert('வெற்றி!', 'பதிவு முடிந்தது', [{ text: 'சரி', onPress: () => navigation.navigate('Home') }]);
+    const handleSubmit = async () => {
+        try {
+            // Combine all data
+            const finalData = {
+                ...formData,
+                password: password,
+            };
+
+            const result = await registerUser(finalData);
+            if (result.status) {
+                Alert.alert(
+                    'வெற்றி!',
+                    'பதிவு முடிந்தது. உங்கள் Profile ID: ' + (result.profile_id || ''),
+                    [{ text: 'சரி', onPress: () => navigation.navigate('Home') }]
+                );
+            } else {
+                Alert.alert('பிழை', result.message || 'பதிவு செய்வதில் சிக்கல்');
+            }
+        } catch (error) {
+            Alert.alert('பிழை', 'ஏதோ தவறு நடந்துவிட்டது');
+        }
     };
+
 
     const handleOtpChange = (index, value) => {
         if (value.length > 1) return;

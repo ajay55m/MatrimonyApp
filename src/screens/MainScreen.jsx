@@ -108,21 +108,31 @@ function MainScreen({ route }) {
         );
     };
 
+    const handleForgotPassword = () => {
+        Alert.alert(
+            t('FORGOT_PASSWORD_TITLE') || 'Forgot Password',
+            t('FORGOT_PASSWORD_MSG') || 'Please contact administrator to reset your password.',
+            [{ text: t('OK') || 'OK' }]
+        );
+    };
+
     const submitLogin = async () => {
         if (!profileId || !password) {
-            Alert.alert(t('ERROR'), 'Please fill in all fields');
+            Alert.alert(t('ERROR'), t('FILL_ALL_FIELDS') || 'Please fill in all fields');
             return;
         }
 
         try {
             const result = await loginUser(profileId, password);
             if (result.status) {
+                Alert.alert(t('SUCCESS'), result.message || t('LOGIN_SUCCESS'));
                 handleLoginSuccess(result.data);
             } else {
                 Alert.alert(t('ERROR'), result.message || t('LOGIN_FAIL'));
             }
         } catch (error) {
-            Alert.alert(t('ERROR'), 'Something went wrong. Please try again later.');
+            console.error('Login error:', error);
+            Alert.alert(t('ERROR'), t('SOMETHING_WENT_WRONG') || 'Something went wrong. Please try again later.');
         }
     };
 
@@ -145,7 +155,7 @@ function MainScreen({ route }) {
 
     const renderLoginModal = () => (
         <Modal
-            animationType="fade"
+            animationType="slide"
             transparent={true}
             visible={loginVisible}
             onRequestClose={() => setLoginVisible(false)}
@@ -163,30 +173,36 @@ function MainScreen({ route }) {
                     <Text style={styles.modalSubtitle}>{t('PLEASE_LOGIN')}</Text>
 
                     <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Profile ID </Text>
-                        <TextInput
-                            style={styles.modalInput}
-                            placeholder="NADARM..."
-                            placeholderTextColor="#999"
-                            value={profileId}
-                            onChangeText={setProfileId}
-                            textContentType="username"
-                            autoComplete="username"
-                        />
+                        <Text style={styles.inputLabel}>Profile ID / Email</Text>
+                        <View style={styles.inputWrapper}>
+                            <Icon name="account" size={20} color="#666" style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.modalInput}
+                                placeholder="HN1234..."
+                                placeholderTextColor="#999"
+                                value={profileId}
+                                onChangeText={setProfileId}
+                                textContentType="username"
+                                autoComplete="username"
+                            />
+                        </View>
                     </View>
 
                     <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Password</Text>
-                        <TextInput
-                            style={styles.modalInput}
-                            placeholder="******"
-                            placeholderTextColor="#999"
-                            secureTextEntry
-                            value={password}
-                            onChangeText={setPassword}
-                            textContentType="password"
-                            autoComplete="password"
-                        />
+                        <Text style={styles.inputLabel}>{t('PASSWORD') || 'Password'}</Text>
+                        <View style={styles.inputWrapper}>
+                            <Icon name="lock" size={20} color="#666" style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.modalInput}
+                                placeholder="******"
+                                placeholderTextColor="#999"
+                                secureTextEntry
+                                value={password}
+                                onChangeText={setPassword}
+                                textContentType="password"
+                                autoComplete="password"
+                            />
+                        </View>
                     </View>
 
                     <TouchableOpacity
@@ -201,9 +217,23 @@ function MainScreen({ route }) {
                         </LinearGradient>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.forgotBtn}>
-                        <Text style={styles.forgotText}>Forgot Password?</Text>
-                    </TouchableOpacity>
+                    <View style={styles.loginExtraActions}>
+                        <TouchableOpacity style={styles.forgotBtn} onPress={handleForgotPassword}>
+                            <Text style={styles.forgotText}>{t('FORGOT_PASSWORD') || 'Forgot Password?'}</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.registerLinkBtn}
+                            onPress={() => {
+                                setLoginVisible(false);
+                                navigation.navigate('Register');
+                            }}
+                        >
+                            <Text style={styles.registerLinkText}>
+                                {t('NO_ACCOUNT') || "Don't have an account?"} <Text style={styles.registerLinkSpan}>{t('REGISTER')}</Text>
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
         </Modal>
@@ -332,15 +362,23 @@ const styles = StyleSheet.create({
         color: '#333',
         marginBottom: 8,
     },
-    modalInput: {
+    inputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
         borderWidth: 1,
         borderColor: '#DDD',
         borderRadius: 10,
-        paddingHorizontal: 15,
+        backgroundColor: '#FAFAFA',
+        paddingHorizontal: 12,
+    },
+    inputIcon: {
+        marginRight: 10,
+    },
+    modalInput: {
+        flex: 1,
         paddingVertical: 10,
         fontSize: 16,
         color: '#333',
-        backgroundColor: '#FAFAFA',
     },
     fullWidthBtn: {
         marginTop: 10,
@@ -356,14 +394,29 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
+    loginExtraActions: {
+        marginTop: 20,
+        alignItems: 'center',
+        gap: 15,
+    },
     forgotBtn: {
-        marginTop: 15,
         alignItems: 'center',
     },
     forgotText: {
-        color: '#ef0d8d',
+        color: '#666',
         fontSize: 14,
         fontWeight: '500',
+    },
+    registerLinkBtn: {
+        marginTop: 5,
+    },
+    registerLinkText: {
+        color: '#666',
+        fontSize: 14,
+    },
+    registerLinkSpan: {
+        color: '#ef0d8d',
+        fontWeight: 'bold',
     },
 });
 
