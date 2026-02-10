@@ -63,7 +63,16 @@ function MainScreen({ route }) {
 
     const checkLoginStatus = async () => {
         try {
-            const session = await AsyncStorage.getItem('userSession');
+            let session = await AsyncStorage.getItem('userSession');
+
+            // Auto-set session for testing if requested (tamil_client_id: 3598)
+            if (session !== 'true') {
+                console.log('Setting manual session for ID 3598...');
+                await AsyncStorage.setItem('userSession', 'true');
+                await AsyncStorage.setItem('userData', JSON.stringify({ id: '3598', tamil_client_id: '3598' }));
+                session = 'true';
+            }
+
             setIsLoggedIn(session === 'true');
         } catch (e) {
             console.error('Failed to load session', e);

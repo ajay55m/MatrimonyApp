@@ -14,6 +14,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Skeleton from '../components/Skeleton';
 import { scale, moderateScale } from '../utils/responsive';
+import { getUserProfile } from '../services/apiService';
 
 const { width } = Dimensions.get('window');
 
@@ -47,20 +48,34 @@ const Dashboard = ({ t }) => {
     const [userData, setUserData] = useState(null);
 
     useEffect(() => {
-        const loadUserData = async () => {
+        const loadDashboardData = async () => {
             try {
+                // 1. Get basic session data
                 const data = await AsyncStorage.getItem('userData');
+                let currentId = null;
                 if (data) {
-                    setUserData(JSON.parse(data));
+                    const parsed = JSON.parse(data);
+                    setUserData(parsed);
+                    currentId = parsed.id || parsed.tamil_client_id;
+                }
+
+                // 2. Fetch fresh profile data via API
+                if (currentId || true) { // fallback/testing
+                    const profileResult = await getUserProfile(currentId || '3598');
+                    if (profileResult.status && profileResult.data) {
+                        console.log('Profile data fetched:', profileResult.data);
+                        // Update userData with fresh info from API if needed
+                        // For now we just log it as a proof of concept
+                    }
                 }
             } catch (error) {
-                console.error('Failed to load user data', error);
+                console.error('Failed to load dashboard data:', error);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        loadUserData();
+        loadDashboardData();
     }, []);
 
     // Header with Profile Summary (unchanged)
