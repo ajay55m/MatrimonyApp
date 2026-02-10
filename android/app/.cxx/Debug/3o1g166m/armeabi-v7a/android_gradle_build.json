@@ -1,6 +1,7 @@
 {
   "buildFiles": [
     "C:\\App-Native\\Matrimony-app\\MatrimonyApp\\node_modules\\@react-native-async-storage\\async-storage\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
+    "C:\\App-Native\\Matrimony-app\\MatrimonyApp\\node_modules\\@react-native-picker\\picker\\android\\src\\main\\jni\\CMakeLists.txt",
     "C:\\App-Native\\Matrimony-app\\MatrimonyApp\\node_modules\\react-native-safe-area-context\\android\\src\\main\\jni\\CMakeLists.txt",
     "C:\\App-Native\\Matrimony-app\\MatrimonyApp\\node_modules\\react-native-screens\\android\\src\\main\\jni\\CMakeLists.txt",
     "C:\\App-Native\\Matrimony-app\\MatrimonyApp\\node_modules\\react-native-vector-icons\\android\\build\\generated\\source\\codegen\\jni\\CMakeLists.txt",
@@ -27,11 +28,12 @@
       "artifactName": "appmodules",
       "output": "C:\\App-Native\\Matrimony-app\\MatrimonyApp\\android\\app\\build\\intermediates\\cxx\\Debug\\3o1g166m\\obj\\armeabi-v7a\\libappmodules.so",
       "runtimeFiles": [
+        "C:\\App-Native\\Matrimony-app\\MatrimonyApp\\android\\app\\build\\intermediates\\cxx\\Debug\\3o1g166m\\obj\\armeabi-v7a\\libreact_codegen_rnpicker.so",
         "C:\\App-Native\\Matrimony-app\\MatrimonyApp\\android\\app\\build\\intermediates\\cxx\\Debug\\3o1g166m\\obj\\armeabi-v7a\\libreact_codegen_safeareacontext.so",
         "C:\\App-Native\\Matrimony-app\\MatrimonyApp\\android\\app\\build\\intermediates\\cxx\\Debug\\3o1g166m\\obj\\armeabi-v7a\\libreact_codegen_rnscreens.so",
-        "C:\\Users\\ajay2\\.gradle\\caches\\9.0.0\\transforms\\49cde1acd35737fffc0a351edeac3186\\transformed\\jetified-fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.armeabi-v7a\\libfbjni.so",
-        "C:\\Users\\ajay2\\.gradle\\caches\\9.0.0\\transforms\\975b5584e106111fd48e7aac9046beec\\transformed\\jetified-react-android-0.83.1-debug\\prefab\\modules\\jsi\\libs\\android.armeabi-v7a\\libjsi.so",
-        "C:\\Users\\ajay2\\.gradle\\caches\\9.0.0\\transforms\\975b5584e106111fd48e7aac9046beec\\transformed\\jetified-react-android-0.83.1-debug\\prefab\\modules\\reactnative\\libs\\android.armeabi-v7a\\libreactnative.so"
+        "C:\\Users\\ajay2\\.gradle\\caches\\8.13\\transforms\\5a4fa8ef8d2ea5d84d321a2c8a409ee0\\transformed\\fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.armeabi-v7a\\libfbjni.so",
+        "C:\\Users\\ajay2\\.gradle\\caches\\8.13\\transforms\\a5eb6650aace0b6e4adedd8cab5789b7\\transformed\\react-android-0.83.1-debug\\prefab\\modules\\jsi\\libs\\android.armeabi-v7a\\libjsi.so",
+        "C:\\Users\\ajay2\\.gradle\\caches\\8.13\\transforms\\a5eb6650aace0b6e4adedd8cab5789b7\\transformed\\react-android-0.83.1-debug\\prefab\\modules\\reactnative\\libs\\android.armeabi-v7a\\libreactnative.so"
       ]
     },
     "react_codegen_RNVectorIconsSpec::@479809fae146501fd34d": {
@@ -44,15 +46,26 @@
       "abi": "armeabi-v7a",
       "artifactName": "react_codegen_rnasyncstorage"
     },
+    "react_codegen_rnpicker::@e8bb2e9e833f47d0d516": {
+      "toolchain": "toolchain",
+      "abi": "armeabi-v7a",
+      "artifactName": "react_codegen_rnpicker",
+      "output": "C:\\App-Native\\Matrimony-app\\MatrimonyApp\\android\\app\\build\\intermediates\\cxx\\Debug\\3o1g166m\\obj\\armeabi-v7a\\libreact_codegen_rnpicker.so",
+      "runtimeFiles": [
+        "C:\\Users\\ajay2\\.gradle\\caches\\8.13\\transforms\\a5eb6650aace0b6e4adedd8cab5789b7\\transformed\\react-android-0.83.1-debug\\prefab\\modules\\reactnative\\libs\\android.armeabi-v7a\\libreactnative.so",
+        "C:\\Users\\ajay2\\.gradle\\caches\\8.13\\transforms\\a5eb6650aace0b6e4adedd8cab5789b7\\transformed\\react-android-0.83.1-debug\\prefab\\modules\\jsi\\libs\\android.armeabi-v7a\\libjsi.so",
+        "C:\\Users\\ajay2\\.gradle\\caches\\8.13\\transforms\\5a4fa8ef8d2ea5d84d321a2c8a409ee0\\transformed\\fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.armeabi-v7a\\libfbjni.so"
+      ]
+    },
     "react_codegen_rnscreens::@25bcbd507e98d3a854ad": {
       "toolchain": "toolchain",
       "abi": "armeabi-v7a",
       "artifactName": "react_codegen_rnscreens",
       "output": "C:\\App-Native\\Matrimony-app\\MatrimonyApp\\android\\app\\build\\intermediates\\cxx\\Debug\\3o1g166m\\obj\\armeabi-v7a\\libreact_codegen_rnscreens.so",
       "runtimeFiles": [
-        "C:\\Users\\ajay2\\.gradle\\caches\\9.0.0\\transforms\\975b5584e106111fd48e7aac9046beec\\transformed\\jetified-react-android-0.83.1-debug\\prefab\\modules\\reactnative\\libs\\android.armeabi-v7a\\libreactnative.so",
-        "C:\\Users\\ajay2\\.gradle\\caches\\9.0.0\\transforms\\975b5584e106111fd48e7aac9046beec\\transformed\\jetified-react-android-0.83.1-debug\\prefab\\modules\\jsi\\libs\\android.armeabi-v7a\\libjsi.so",
-        "C:\\Users\\ajay2\\.gradle\\caches\\9.0.0\\transforms\\49cde1acd35737fffc0a351edeac3186\\transformed\\jetified-fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.armeabi-v7a\\libfbjni.so"
+        "C:\\Users\\ajay2\\.gradle\\caches\\8.13\\transforms\\a5eb6650aace0b6e4adedd8cab5789b7\\transformed\\react-android-0.83.1-debug\\prefab\\modules\\reactnative\\libs\\android.armeabi-v7a\\libreactnative.so",
+        "C:\\Users\\ajay2\\.gradle\\caches\\8.13\\transforms\\a5eb6650aace0b6e4adedd8cab5789b7\\transformed\\react-android-0.83.1-debug\\prefab\\modules\\jsi\\libs\\android.armeabi-v7a\\libjsi.so",
+        "C:\\Users\\ajay2\\.gradle\\caches\\8.13\\transforms\\5a4fa8ef8d2ea5d84d321a2c8a409ee0\\transformed\\fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.armeabi-v7a\\libfbjni.so"
       ]
     },
     "react_codegen_safeareacontext::@7984cd80db47aa7b952a": {
@@ -61,9 +74,9 @@
       "artifactName": "react_codegen_safeareacontext",
       "output": "C:\\App-Native\\Matrimony-app\\MatrimonyApp\\android\\app\\build\\intermediates\\cxx\\Debug\\3o1g166m\\obj\\armeabi-v7a\\libreact_codegen_safeareacontext.so",
       "runtimeFiles": [
-        "C:\\Users\\ajay2\\.gradle\\caches\\9.0.0\\transforms\\49cde1acd35737fffc0a351edeac3186\\transformed\\jetified-fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.armeabi-v7a\\libfbjni.so",
-        "C:\\Users\\ajay2\\.gradle\\caches\\9.0.0\\transforms\\975b5584e106111fd48e7aac9046beec\\transformed\\jetified-react-android-0.83.1-debug\\prefab\\modules\\jsi\\libs\\android.armeabi-v7a\\libjsi.so",
-        "C:\\Users\\ajay2\\.gradle\\caches\\9.0.0\\transforms\\975b5584e106111fd48e7aac9046beec\\transformed\\jetified-react-android-0.83.1-debug\\prefab\\modules\\reactnative\\libs\\android.armeabi-v7a\\libreactnative.so"
+        "C:\\Users\\ajay2\\.gradle\\caches\\8.13\\transforms\\5a4fa8ef8d2ea5d84d321a2c8a409ee0\\transformed\\fbjni-0.7.0\\prefab\\modules\\fbjni\\libs\\android.armeabi-v7a\\libfbjni.so",
+        "C:\\Users\\ajay2\\.gradle\\caches\\8.13\\transforms\\a5eb6650aace0b6e4adedd8cab5789b7\\transformed\\react-android-0.83.1-debug\\prefab\\modules\\jsi\\libs\\android.armeabi-v7a\\libjsi.so",
+        "C:\\Users\\ajay2\\.gradle\\caches\\8.13\\transforms\\a5eb6650aace0b6e4adedd8cab5789b7\\transformed\\react-android-0.83.1-debug\\prefab\\modules\\reactnative\\libs\\android.armeabi-v7a\\libreactnative.so"
       ]
     }
   },

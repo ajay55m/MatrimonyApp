@@ -27,6 +27,9 @@ import Skeleton from '../../components/Skeleton';
 // Translations
 import { TRANSLATIONS } from '../../constants/translations';
 
+// Services
+import { getSelectedProfiles } from '../../services/apiService';
+
 const ProfileScreen = () => {
     const insets = useSafeAreaInsets();
     const navigation = useNavigation();
@@ -42,12 +45,26 @@ const ProfileScreen = () => {
     const t = (key) => TRANSLATIONS[lang][key] || key;
 
     useEffect(() => {
-        checkLoginStatus();
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 2000);
-        return () => clearTimeout(timer);
+        const init = async () => {
+            await checkLoginStatus();
+            await fetchProfiles();
+        };
+        init();
     }, []);
+
+    const fetchProfiles = async () => {
+        setIsLoading(true);
+        try {
+            const response = await getSelectedProfiles();
+            if (response.status && response.data) {
+                setProfiles(response.data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch profiles:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const checkLoginStatus = async () => {
         try {
@@ -58,56 +75,7 @@ const ProfileScreen = () => {
         }
     };
 
-    const [profiles] = useState([
-        {
-            id: 'NADARM1000394',
-            name: 'D.ராம் மனோகர் காவல்கர்',
-            age: '29',
-            height: '5\'9"',
-            religion: 'Hindu',
-            caste: 'நாடார்',
-            location: 'சுலூர்ப்பேரி',
-            education: 'Master Degree',
-            profession: 'Private Sector',
-            verified: true,
-            horoscope: true,
-            compatibility: '89',
-            lastActive: '2h ago',
-            avatarColor: ['#f3f4f7ff', '#2C73D2'],
-        },
-        {
-            id: 'NADARM1000534',
-            name: 'C.ராஜகுமார்',
-            age: '30',
-            height: '5\'9"',
-            religion: 'Hindu',
-            caste: 'நாடார்',
-            location: 'புதியமுத்தூர்',
-            education: 'Bachelor Degree',
-            profession: 'Business Owner',
-            verified: true,
-            horoscope: true,
-            compatibility: '92',
-            lastActive: '1d ago',
-            avatarColor: ['#E74C5C', '#D32F2F'],
-        },
-        {
-            id: 'NADARM1000683',
-            name: 'S.சேகர்',
-            age: '28',
-            height: '5\'8"',
-            religion: 'Hindu',
-            caste: 'நாடார்',
-            location: 'சேலம்',
-            education: 'B.E Computer Science',
-            profession: 'Software Engineer',
-            verified: true,
-            horoscope: true,
-            compatibility: '95',
-            lastActive: 'Online',
-            avatarColor: ['#4CAF50', '#388E3C'],
-        },
-    ]);
+    const [profiles, setProfiles] = useState([]);
 
     const handleFooterNavigation = (tab) => {
         if (tab === 'HOME') {
@@ -134,18 +102,22 @@ const ProfileScreen = () => {
     };
 
     const renderProfileCard = (profile, index) => {
+        const profileId = profile.profile_id || profile.id;
+        const lastActive = profile.lastActive || '2h ago';
+        const colors = profile.avatarColor || (index % 2 === 0 ? ['#f3f4f7ff', '#2C73D2'] : ['#E74C5C', '#D32F2F']);
+
         return (
-            <View key={profile.id} style={styles.cardWrapper}>
+            <View key={profileId} style={styles.cardWrapper}>
                 <View style={styles.profileCard}>
                     {/* Simple Header with Badge */}
                     <View style={styles.cardHeader}>
                         <View style={styles.profileBadge}>
                             <Icon name="account-circle" size={scale(16)} color="#2d3031ff" />
-                            <Text style={styles.profileIdText}>{profile.id}</Text>
+                            <Text style={styles.profileIdText}>{profileId}</Text>
                         </View>
                         <View style={styles.statusBadge}>
-                            <View style={[styles.statusDot, { backgroundColor: profile.lastActive === 'Online' ? '#4CAF50' : '#FF9800' }]} />
-                            <Text style={[styles.statusText, { color: profile.lastActive === 'Online' ? '#2E7D32' : '#E65100' }]}>{profile.lastActive}</Text>
+                            <View style={[styles.statusDot, { backgroundColor: lastActive === 'Online' ? '#4CAF50' : '#FF9800' }]} />
+                            <Text style={[styles.statusText, { color: lastActive === 'Online' ? '#2E7D32' : '#E65100' }]}>{lastActive}</Text>
                         </View>
                     </View>
 
@@ -156,7 +128,7 @@ const ProfileScreen = () => {
                         <View style={styles.avatarContainer}>
                             <View style={styles.avatarOuterRing}>
                                 <LinearGradient
-                                    colors={profile.avatarColor}
+                                    colors={colors}
                                     style={styles.avatarInner}
                                     start={{ x: 0, y: 0 }}
                                     end={{ x: 1, y: 1 }}
@@ -175,13 +147,13 @@ const ProfileScreen = () => {
 
                             {/* Badges in the 'play of match' space */}
                             <View style={styles.matchScoreContainer}>
-                                {profile.verified && (
+                                {(profile.verified || true) && (
                                     <View style={styles.verifiedBadgeSmall}>
                                         <Icon name="shield-check" size={scale(12)} color="#4CAF50" />
                                         <Text style={styles.badgeLabelSmall}>Verified</Text>
                                     </View>
                                 )}
-                                {profile.horoscope && (
+                                {(profile.horoscope || true) && (
                                     <View style={styles.horoscopeBadgeSmall}>
                                         <Icon name="star" size={scale(12)} color="#FF9800" />
                                         <Text style={styles.badgeLabelSmall}>Horoscope</Text>
@@ -205,30 +177,30 @@ const ProfileScreen = () => {
                                 <View style={styles.detailCol}>
                                     <View style={styles.detail}>
                                         <Icon name="human-male-height" size={scale(14)} color="#666" />
-                                        <Text style={styles.detailText}>{profile.height}</Text>
+                                        <Text style={styles.detailText}>{profile.height || profile.height_id || '5\'5"'}</Text>
                                     </View>
                                     <View style={styles.detail}>
                                         <Icon name="om" size={scale(14)} color="#666" />
-                                        <Text style={styles.detailText}>{profile.religion}</Text>
+                                        <Text style={styles.detailText}>{profile.religion || 'Hindu'}</Text>
                                     </View>
                                     <View style={styles.detail}>
                                         <Icon name="account-group" size={scale(14)} color="#666" />
-                                        <Text style={styles.detailText}>{profile.caste}</Text>
+                                        <Text style={styles.detailText}>{profile.caste || 'Nadar'}</Text>
                                     </View>
                                 </View>
 
                                 <View style={styles.detailCol}>
                                     <View style={styles.detail}>
                                         <Icon name="map-marker" size={scale(14)} color="#666" />
-                                        <Text style={styles.detailText} numberOfLines={1}>{profile.location}</Text>
+                                        <Text style={styles.detailText} numberOfLines={1}>{profile.location || profile.district || 'Tamil Nadu'}</Text>
                                     </View>
                                     <View style={styles.detail}>
                                         <Icon name="school" size={scale(14)} color="#666" />
-                                        <Text style={styles.detailText} numberOfLines={1}>{profile.education}</Text>
+                                        <Text style={styles.detailText} numberOfLines={1}>{profile.education || profile.degree || 'Degree'}</Text>
                                     </View>
                                     <View style={styles.detail}>
                                         <Icon name="briefcase" size={scale(14)} color="#666" />
-                                        <Text style={styles.detailText} numberOfLines={1}>{profile.profession}</Text>
+                                        <Text style={styles.detailText} numberOfLines={1}>{profile.profession || profile.occupation || 'Private'}</Text>
                                     </View>
                                 </View>
                             </View>

@@ -60,6 +60,29 @@ export const getUserProfile = async (tamilClientId) => {
 };
 
 /**
+ * Get Selected Profiles (Matches)
+ */
+export const getSelectedProfiles = async (tamilClientId) => {
+    let id = tamilClientId;
+    if (!id) {
+        const userData = await AsyncStorage.getItem('userData');
+        if (userData) {
+            const user = JSON.parse(userData);
+            id = user.id || user.tamil_client_id;
+        }
+    }
+
+    if (!id) {
+        return { status: false, message: 'No client ID found' };
+    }
+
+    const result = await postRequest(API_ENDPOINTS.SELECTED_PROFILES, {
+        tamil_client_id: id
+    });
+    return result;
+};
+
+/**
  * Manual Session Setter (Helper for development/testing as requested)
  */
 export const setManualSession = async (clientId) => {

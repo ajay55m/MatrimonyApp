@@ -141,7 +141,7 @@ const Dashboard = ({ t }) => {
     // Quick Info Stats Cards
     const renderQuickInfo = () => (
         <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('Quick Info')}</Text>
+            <Text style={styles.sectionTitle}>{t('QUICK_INFO') || 'முக்கிய விபரங்கள்'}</Text>
             <View style={styles.statsGrid}>
                 {[
                     { value: '0', label: t('New Messages'), gradient: ['#FF4081', '#FF80AB'], icon: 'message-text' },
@@ -152,6 +152,7 @@ const Dashboard = ({ t }) => {
                     <TouchableOpacity
                         key={index}
                         activeOpacity={0.8}
+                        style={styles.statBoxWrapper}
                     >
                         <LinearGradient
                             colors={item.gradient}
@@ -160,10 +161,10 @@ const Dashboard = ({ t }) => {
                             end={{ x: 1, y: 1 }}
                         >
                             <View style={styles.statHeader}>
-                                <Icon name={item.icon} size={24} color="#FFF" />
+                                <Icon name={item.icon} size={scale(24)} color="#FFF" />
                                 <Text style={styles.statBoxValue}>{item.value}</Text>
                             </View>
-                            <Text style={styles.statBoxLabel}>{item.label}</Text>
+                            <Text style={styles.statBoxLabel} numberOfLines={1}>{item.label}</Text>
                         </LinearGradient>
                     </TouchableOpacity>
                 ))}
@@ -174,12 +175,25 @@ const Dashboard = ({ t }) => {
     // Random Profiles Section (Premium Lock)
     const renderRandomProfiles = () => (
         <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('Random Profiles')}</Text>
+            <View style={styles.sectionHeaderRow}>
+                <Text style={[styles.sectionTitle, { marginBottom: 0, flex: 1 }]}>{t('OTHER_PROFILES')}</Text>
+                <TouchableOpacity onPress={() => { }}>
+                    <Text style={styles.upgradeLinkText}>{t('UPGRADE')}</Text>
+                </TouchableOpacity>
+            </View>
             <View style={styles.premiumLockBox}>
                 <Icon name="lock-outline" size={32} color={COLORS.warning} />
                 <Text style={styles.lockText}>
-                    {t('Validate your email to upgrade to Premium Membership to message and communicate with others.')}
+                    {t('VERIFY_EMAIL')}
                 </Text>
+                <TouchableOpacity style={styles.upgradeBtnWide}>
+                    <LinearGradient
+                        colors={[COLORS.primary, COLORS.primaryDark]}
+                        style={styles.upgradeGradient}
+                    >
+                        <Text style={styles.upgradeText}>{t('GET_MORE_PROFILES')}</Text>
+                    </LinearGradient>
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -188,85 +202,107 @@ const Dashboard = ({ t }) => {
     const renderProfileSidebar = () => (
         <View style={styles.sidebarCard}>
             <View style={styles.welcomeHeader}>
-                <Text style={styles.welcomeLabel}>Welcome,</Text>
-                <Text style={styles.sidebarWelcomeText}>{userData?.username || 'User'}</Text>
-                <Text style={styles.profileId}>{userData?.client_id || '...'}</Text>
+                <Text style={styles.welcomeLabel}>{t('WELCOME') || 'வரவேற்கிறோம்'},</Text>
+                <Text style={styles.sidebarWelcomeText}>{userData?.username || t('USER') || 'பயனர்'}</Text>
+                <Text style={styles.profileId}>{userData?.profile_id || userData?.client_id || '...'}</Text>
             </View>
 
             <TouchableOpacity style={styles.sidebarAvatar}>
-                <Image
-                    source={require('../assets/images/avatar_male.png')}
-                    style={styles.sidebarAvatarImage}
-                />
-                <View style={styles.uploadBadge}>
-                    <Icon name="camera" size={16} color="#FFF" />
+                <View style={styles.avatarShadow}>
+                    <Image
+                        source={require('../assets/images/avatar_male.png')}
+                        style={styles.sidebarAvatarImage}
+                    />
+                    <View style={styles.uploadBadge}>
+                        <Icon name="camera" size={scale(16)} color="#FFF" />
+                    </View>
                 </View>
             </TouchableOpacity>
 
             <View style={styles.sidebarLinks}>
                 <TouchableOpacity style={styles.sidebarLinkItem}>
-                    <View style={[styles.linkIconBg, { backgroundColor: '#FFE5EF' }]}>
-                        <Icon name="image-multiple" size={18} color={COLORS.primary} />
+                    <View style={[styles.linkIconBg, { backgroundColor: '#FFEEF6' }]}>
+                        <Icon name="image-multiple" size={scale(18)} color={COLORS.primary} />
                     </View>
-                    <Text style={styles.sidebarLinkText}>{t('View Pictures')}</Text>
+                    <Text style={styles.sidebarLinkText}>{t('VIEW_PICTURES') || 'படங்களைப் பார்க்க'}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.sidebarLinkItem}>
-                    <View style={[styles.linkIconBg, { backgroundColor: '#FFE5EF' }]}>
-                        <Icon name="heart" size={18} color={COLORS.primary} />
+                    <View style={[styles.linkIconBg, { backgroundColor: '#FFEEF6' }]}>
+                        <Icon name="heart" size={scale(18)} color={COLORS.primary} />
                     </View>
-                    <Text style={styles.sidebarLinkText}>{t('Selected Profiles')} (1)</Text>
+                    <Text style={styles.sidebarLinkText}>{t('SELECTED_PROFILES') || 'தேர்ந்தெடுக்கப்பட்டவை'} (1)</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.sidebarLinkItem}>
                     <View style={[styles.linkIconBg, { backgroundColor: '#E3F2FD' }]}>
-                        <Icon name="zodiac-leo" size={18} color={COLORS.blue} />
+                        <Icon name="zodiac-leo" size={scale(18)} color={COLORS.info} />
                     </View>
-                    <Text style={styles.sidebarLinkText}>{t('View Your Horoscope')}</Text>
+                    <Text style={styles.sidebarLinkText}>{t('VIEW_HOROSCOPE') || 'ஜாதகத்தைப் பார்க்க'}</Text>
                 </TouchableOpacity>
 
                 <View style={styles.sidebarDivider} />
 
                 <View style={styles.sidebarInfoItem}>
-                    <Icon name="eye-outline" size={16} color={COLORS.blue} />
-                    <Text style={styles.sidebarInfoText}>{t('Total Views')}</Text>
+                    <Icon name="eye-outline" size={scale(16)} color={COLORS.info} />
+                    <Text style={styles.sidebarInfoText}>{t('TOTAL_VIEWS') || 'மொத்த பார்வைகள்'}</Text>
                     <Text style={styles.sidebarInfoValueInline}>1/50</Text>
                 </View>
 
                 <View style={styles.sidebarDivider} />
 
                 <View style={styles.sidebarInfoItem}>
-                    <Icon name="calendar-alert" size={16} color={COLORS.danger} />
-                    <Text style={styles.sidebarInfoText}>{t('Membership Ends')}</Text>
+                    <Icon name="calendar-alert" size={scale(16)} color={COLORS.danger} />
+                    <Text style={styles.sidebarInfoText}>{t('MEMBERSHIP_ENDS') || 'சந்தா முடிவடையும் நாள்'}</Text>
                     <Text style={[styles.sidebarInfoValueInline, { color: COLORS.danger }]}>09-01-2027</Text>
                 </View>
             </View>
         </View>
     );
 
-    // Membership Information Section
+    // Membership Section - Re-designed as a Premium VIP Card
     const renderMembershipInfo = () => (
-        <View style={styles.membershipSection}>
-            <Text style={styles.membershipTitle}>{t('Membership Information')}</Text>
-            <View style={styles.membershipCard}>
-                <View style={styles.membershipRow}>
-                    <Text style={styles.membershipLabel}>{t('Join Date:')}</Text>
-                    <Text style={styles.membershipValue}>09-01-2026</Text>
+        <View style={styles.section}>
+            <LinearGradient
+                colors={['#1a2a6c', '#b21f1f', '#fdbb2d']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.premiumCard}
+            >
+                <View style={styles.premiumHeader}>
+                    <View>
+                        <Text style={styles.premiumLabel}>{t('ACTIVE_PLAN')}</Text>
+                        <Text style={styles.premiumValue}>{t('FREE')}</Text>
+                    </View>
+                    <Icon name="crown" size={40} color="#FFD700" />
                 </View>
-                <View style={styles.membershipRow}>
-                    <Text style={styles.membershipLabel}>{t('Active Membership plan:')}</Text>
-                    <Text style={[styles.membershipValue, { color: COLORS.success }]}>Free</Text>
+
+                <View style={styles.planProgressContainer}>
+                    <View style={styles.progressHeader}>
+                        <Text style={styles.progressText}>{t('PLAN_WARNING')}</Text>
+                        <Text style={styles.progressPercent}>1/50</Text>
+                    </View>
+                    <View style={styles.progressBarBg}>
+                        <View style={[styles.progressBarFill, { width: '2%' }]} />
+                    </View>
                 </View>
-                <View style={styles.membershipRow}>
-                    <Text style={styles.membershipLabel}>{t('Your Profile Viewers:')}</Text>
-                    <Text style={styles.membershipValue}>0</Text>
+
+                <View style={styles.benefitsContainer}>
+                    <Text style={styles.benefitsTitle}>{t('GET_MORE_PROFILES')}:</Text>
+                    <View style={styles.benefitRow}>
+                        <Icon name="check-decagram" size={16} color="#FFF" />
+                        <Text style={styles.benefitText}>{t('UNLIMITED_PROFILES')}</Text>
+                    </View>
+                    <View style={styles.benefitRow}>
+                        <Icon name="check-decagram" size={16} color="#FFF" />
+                        <Text style={styles.benefitText}>{t('CONTACT_UNLIMITED')}</Text>
+                    </View>
                 </View>
-                <View style={styles.membershipNote}>
-                    <Text style={styles.membershipNoteText}>
-                        {t('Your Can able to select only 50 members with this plan. 49 members remaining.')}
-                    </Text>
-                </View>
-            </View>
+
+                <TouchableOpacity style={styles.upgradeBtnMain}>
+                    <Text style={styles.upgradeBtnTextMain}>{t('UPGRADE')}</Text>
+                </TouchableOpacity>
+            </LinearGradient>
         </View>
     );
 
@@ -282,19 +318,12 @@ const Dashboard = ({ t }) => {
                 contentContainerStyle={styles.content}
                 showsVerticalScrollIndicator={false}
             >
-                {/* {renderHeader()} */}
-
                 <View style={styles.mainContent}>
-                    <View style={styles.leftColumn}>
-                        {renderProfileSidebar()}
-                        {renderMembershipInfo()}
-                    </View>
-
-                    <View style={styles.rightColumn}>
-                        {renderProfileAlert()}
-                        {renderQuickInfo()}
-                        {renderRandomProfiles()}
-                    </View>
+                    {renderProfileSidebar()}
+                    {renderMembershipInfo()}
+                    {renderQuickInfo()}
+                    {renderProfileAlert()}
+                    {renderRandomProfiles()}
                 </View>
             </ScrollView>
         </View>
@@ -466,30 +495,34 @@ const styles = StyleSheet.create({
     statsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 12,
+        justifyContent: 'space-between',
+        rowGap: scale(12),
+    },
+    statBoxWrapper: {
+        width: '48%',
     },
     statBox: {
-        width: (width - 60) / 2, // Slightly more breathing room
+        width: '100%',
         height: scale(95),
-        borderRadius: 20,
-        padding: 12,
+        borderRadius: scale(16),
+        padding: scale(10),
         justifyContent: 'center',
-        alignItems: 'center', // Center everything
+        alignItems: 'center',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 4,
+        shadowOffset: { width: 0, height: scale(3) },
+        shadowOpacity: 0.1,
+        shadowRadius: scale(6),
+        elevation: scale(3),
     },
     statHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
-        marginBottom: 6,
+        gap: scale(8),
+        marginBottom: scale(4),
     },
     statBoxValue: {
-        fontSize: moderateScale(26),
+        fontSize: moderateScale(22),
         fontWeight: 'bold',
         color: '#FFF',
     },
@@ -499,6 +532,20 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         opacity: 0.95,
         textAlign: 'center',
+        marginTop: scale(2),
+    },
+    sectionHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: scale(15),
+        gap: scale(10),
+    },
+    upgradeLinkText: {
+        color: COLORS.primary,
+        fontWeight: 'bold',
+        fontSize: moderateScale(12),
+        textDecorationLine: 'underline',
     },
 
     // Premium Lock Box
@@ -552,28 +599,39 @@ const styles = StyleSheet.create({
     },
     sidebarAvatar: {
         alignItems: 'center',
-        marginBottom: 24,
+        marginBottom: scale(20),
+    },
+    avatarShadow: {
+        width: scale(100),
+        height: scale(100),
+        borderRadius: scale(50),
+        backgroundColor: '#FFF',
+        elevation: scale(8),
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: scale(4) },
+        shadowOpacity: 0.2,
+        shadowRadius: scale(10),
         position: 'relative',
     },
     sidebarAvatarImage: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        borderWidth: 3,
-        borderColor: COLORS.primaryLight,
+        width: '100%',
+        height: '100%',
+        borderRadius: scale(50),
+        borderWidth: scale(3),
+        borderColor: '#FFF',
     },
     uploadBadge: {
         position: 'absolute',
-        bottom: 0,
-        right: '35%',
+        bottom: scale(2),
+        right: scale(2),
         backgroundColor: COLORS.primary,
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: scale(30),
+        height: scale(30),
+        borderRadius: scale(15),
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 3,
-        borderColor: COLORS.card,
+        borderWidth: scale(2),
+        borderColor: '#FFF',
     },
     sidebarLinks: {
         gap: 4,
@@ -677,6 +735,117 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: COLORS.danger,
         lineHeight: 18,
+    },
+
+    // Premium Card Styles
+    premiumCard: {
+        borderRadius: 24,
+        padding: 24,
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        marginBottom: 10,
+    },
+    premiumHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    premiumLabel: {
+        color: 'rgba(255,255,255,0.8)',
+        fontSize: 12,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+    },
+    premiumValue: {
+        color: '#FFF',
+        fontSize: 24,
+        fontWeight: 'bold',
+    },
+    planProgressContainer: {
+        marginBottom: 20,
+    },
+    progressHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    progressText: {
+        color: '#FFF',
+        fontSize: 11,
+        fontWeight: '500',
+        flex: 1,
+        marginRight: 10,
+    },
+    progressPercent: {
+        color: '#FFF',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    progressBarBg: {
+        height: 6,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 3,
+        overflow: 'hidden',
+    },
+    progressBarFill: {
+        height: '100%',
+        backgroundColor: '#FFD700',
+    },
+    benefitsContainer: {
+        marginBottom: 24,
+    },
+    benefitsTitle: {
+        color: '#FFF',
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 12,
+    },
+    benefitRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 8,
+    },
+    benefitText: {
+        color: '#FFF',
+        fontSize: 13,
+        fontWeight: '500',
+    },
+    upgradeBtnMain: {
+        backgroundColor: '#FFF',
+        borderRadius: 15,
+        paddingVertical: 14,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+    },
+    upgradeBtnTextMain: {
+        color: '#1a2a6c',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+
+    // Other styles preserved/cleaned
+    upgradeBtnWide: {
+        marginTop: 15,
+        width: '100%',
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    upgradeGradient: {
+        paddingVertical: 12,
+        alignItems: 'center',
+    },
+    upgradeText: {
+        color: '#FFF',
+        fontWeight: 'bold',
+        fontSize: 14,
     },
 });
 
