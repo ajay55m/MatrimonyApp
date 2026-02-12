@@ -7,7 +7,7 @@ import { ENDPOINTS } from '../config/apiConfig';
  */
 export const loginUser = async (profileId, password) => {
     try {
-        const body = `profileid=${encodeURIComponent(profileId)}&password=${encodeURIComponent(password)}`;
+        const body = `email=${encodeURIComponent(profileId)}&password=${encodeURIComponent(password)}`;
 
         const response = await fetch(ENDPOINTS.LOGIN, {
             method: 'POST',

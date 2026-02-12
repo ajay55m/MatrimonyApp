@@ -76,6 +76,9 @@ function MainScreen({ route }) {
             await AsyncStorage.setItem('userSession', 'true');
             if (userData) {
                 await AsyncStorage.setItem('userData', JSON.stringify(userData));
+                if (userData.tamil_client_id) {
+                    await AsyncStorage.setItem('tamil_client_id', userData.tamil_client_id);
+                }
             }
             setIsLoggedIn(true);
             setLoginVisible(false);
@@ -88,6 +91,7 @@ function MainScreen({ route }) {
         try {
             await AsyncStorage.removeItem('userSession');
             await AsyncStorage.removeItem('userData');
+            await AsyncStorage.removeItem('tamil_client_id');
             setIsLoggedIn(false);
             setActiveTab('HOME'); // Reset to Home on logout
         } catch (e) {
@@ -125,7 +129,6 @@ function MainScreen({ route }) {
         try {
             const result = await loginUser(profileId, password);
             if (result.status) {
-                Alert.alert(t('SUCCESS'), result.message || t('LOGIN_SUCCESS'));
                 handleLoginSuccess(result.data);
             } else {
                 Alert.alert(t('ERROR'), result.message || t('LOGIN_FAIL'));
@@ -173,7 +176,7 @@ function MainScreen({ route }) {
                     <Text style={styles.modalSubtitle}>{t('PLEASE_LOGIN')}</Text>
 
                     <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Profile ID / Email</Text>
+                        <Text style={styles.inputLabel}>{t('PROFILE_ID') || 'Profile ID'}</Text>
                         <View style={styles.inputWrapper}>
                             <Icon name="account" size={20} color="#666" style={styles.inputIcon} />
                             <TextInput

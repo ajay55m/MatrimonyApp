@@ -23,6 +23,8 @@ import { scale, moderateScale, width } from '../../utils/responsive';
 import Footer from '../../components/Footer';
 import SidebarMenu from '../../components/SidebarMenu';
 import Skeleton from '../../components/Skeleton';
+import { getSelectedProfiles } from '../../services/profileService';
+
 
 // Translations
 import { TRANSLATIONS } from '../../constants/translations';
@@ -42,72 +44,51 @@ const ProfileScreen = () => {
     const t = (key) => TRANSLATIONS[lang][key] || key;
 
     useEffect(() => {
-        checkLoginStatus();
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 2000);
-        return () => clearTimeout(timer);
+        const initialize = async () => {
+            const loggedIn = await checkLoginStatus();
+            if (loggedIn) {
+                fetchProfiles();
+            } else {
+                setIsLoading(false);
+            }
+        };
+        initialize();
     }, []);
+
+    const fetchProfiles = async () => {
+        try {
+            setIsLoading(true);
+            const data = await AsyncStorage.getItem('userData');
+            if (data) {
+                const user = JSON.parse(data);
+                const result = await getSelectedProfiles(user.tamil_client_id || user.client_id || user.profileid);
+                if (result.status && result.data) {
+                    setProfiles(result.data);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching selected profiles:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
 
     const checkLoginStatus = async () => {
         try {
             const session = await AsyncStorage.getItem('userSession');
-            setIsLoggedIn(session === 'true');
+            const loggedIn = session === 'true';
+            setIsLoggedIn(loggedIn);
+            return loggedIn;
         } catch (e) {
             console.error('Failed to load session', e);
+            return false;
         }
     };
 
-    const [profiles] = useState([
-        {
-            id: 'NADARM1000394',
-            name: 'D.ராம் மனோகர் காவல்கர்',
-            age: '29',
-            height: '5\'9"',
-            religion: 'Hindu',
-            caste: 'நாடார்',
-            location: 'சுலூர்ப்பேரி',
-            education: 'Master Degree',
-            profession: 'Private Sector',
-            verified: true,
-            horoscope: true,
-            compatibility: '89',
-            lastActive: '2h ago',
-            avatarColor: ['#f3f4f7ff', '#2C73D2'],
-        },
-        {
-            id: 'NADARM1000534',
-            name: 'C.ராஜகுமார்',
-            age: '30',
-            height: '5\'9"',
-            religion: 'Hindu',
-            caste: 'நாடார்',
-            location: 'புதியமுத்தூர்',
-            education: 'Bachelor Degree',
-            profession: 'Business Owner',
-            verified: true,
-            horoscope: true,
-            compatibility: '92',
-            lastActive: '1d ago',
-            avatarColor: ['#E74C5C', '#D32F2F'],
-        },
-        {
-            id: 'NADARM1000683',
-            name: 'S.சேகர்',
-            age: '28',
-            height: '5\'8"',
-            religion: 'Hindu',
-            caste: 'நாடார்',
-            location: 'சேலம்',
-            education: 'B.E Computer Science',
-            profession: 'Software Engineer',
-            verified: true,
-            horoscope: true,
-            compatibility: '95',
-            lastActive: 'Online',
-            avatarColor: ['#4CAF50', '#388E3C'],
-        },
-    ]);
+
+    const [profiles, setProfiles] = useState([]);
+
 
     const handleFooterNavigation = (tab) => {
         if (tab === 'HOME') {
@@ -134,20 +115,28 @@ const ProfileScreen = () => {
     };
 
     const renderProfileCard = (profile, index) => {
+        // Handle API data mapping
+        const profileId = profile.profile_id || profile.id;
+        const lastActiveText = profile.lastActive || (profile.viewed ? 'Recent' : 'New');
+        const professionText = profile.occupation || profile.profession;
+        const educationText = Array.isArray(profile.education) ? profile.education.join(', ') : profile.education;
+        const avatarColors = profile.avatarColor || (index % 2 === 0 ? ['#f3f4f7ff', '#2C73D2'] : ['#E74C5C', '#D32F2F']);
+
         return (
-            <View key={profile.id} style={styles.cardWrapper}>
+            <View key={profileId} style={styles.cardWrapper}>
                 <View style={styles.profileCard}>
                     {/* Simple Header with Badge */}
                     <View style={styles.cardHeader}>
                         <View style={styles.profileBadge}>
                             <Icon name="account-circle" size={scale(16)} color="#2d3031ff" />
-                            <Text style={styles.profileIdText}>{profile.id}</Text>
+                            <Text style={styles.profileIdText}>{profileId}</Text>
                         </View>
                         <View style={styles.statusBadge}>
-                            <View style={[styles.statusDot, { backgroundColor: profile.lastActive === 'Online' ? '#4CAF50' : '#FF9800' }]} />
-                            <Text style={[styles.statusText, { color: profile.lastActive === 'Online' ? '#2E7D32' : '#E65100' }]}>{profile.lastActive}</Text>
+                            <View style={[styles.statusDot, { backgroundColor: lastActiveText === 'Online' ? '#4CAF50' : '#FF9800' }]} />
+                            <Text style={[styles.statusText, { color: lastActiveText === 'Online' ? '#2E7D32' : '#E65100' }]}>{lastActiveText}</Text>
                         </View>
                     </View>
+
 
                     {/* Main Content */}
                     <View style={styles.cardBody}>
@@ -156,12 +145,13 @@ const ProfileScreen = () => {
                         <View style={styles.avatarContainer}>
                             <View style={styles.avatarOuterRing}>
                                 <LinearGradient
-                                    colors={profile.avatarColor}
+                                    colors={avatarColors}
                                     style={styles.avatarInner}
                                     start={{ x: 0, y: 0 }}
                                     end={{ x: 1, y: 1 }}
                                 >
                                     <Icon name="account" size={scale(30)} color="#FFFFFF" />
+
                                     {!isLoggedIn && (
                                         <View style={styles.glassOverlay}>
                                             <View style={styles.lockIconContainer}>
@@ -175,18 +165,19 @@ const ProfileScreen = () => {
 
                             {/* Badges in the 'play of match' space */}
                             <View style={styles.matchScoreContainer}>
-                                {profile.verified && (
+                                {(profile.verified || profile.viewed) && (
                                     <View style={styles.verifiedBadgeSmall}>
                                         <Icon name="shield-check" size={scale(12)} color="#4CAF50" />
-                                        <Text style={styles.badgeLabelSmall}>Verified</Text>
+                                        <Text style={styles.badgeLabelSmall}>{profile.viewed ? 'Viewed' : 'Verified'}</Text>
                                     </View>
                                 )}
-                                {profile.horoscope && (
+                                {(profile.horoscope || profile.photo_requested) && (
                                     <View style={styles.horoscopeBadgeSmall}>
-                                        <Icon name="star" size={scale(12)} color="#FF9800" />
-                                        <Text style={styles.badgeLabelSmall}>Horoscope</Text>
+                                        <Icon name={profile.photo_requested ? "camera" : "star"} size={scale(12)} color="#FF9800" />
+                                        <Text style={styles.badgeLabelSmall}>{profile.photo_requested ? 'Photo Req' : 'Horoscope'}</Text>
                                     </View>
                                 )}
+
                             </View>
                         </View>
 
@@ -213,8 +204,9 @@ const ProfileScreen = () => {
                                     </View>
                                     <View style={styles.detail}>
                                         <Icon name="account-group" size={scale(14)} color="#666" />
-                                        <Text style={styles.detailText}>{profile.caste}</Text>
+                                        <Text style={styles.detailText}>{profile.caste || 'Nadar'}</Text>
                                     </View>
+
                                 </View>
 
                                 <View style={styles.detailCol}>
@@ -224,12 +216,13 @@ const ProfileScreen = () => {
                                     </View>
                                     <View style={styles.detail}>
                                         <Icon name="school" size={scale(14)} color="#666" />
-                                        <Text style={styles.detailText} numberOfLines={1}>{profile.education}</Text>
+                                        <Text style={styles.detailText} numberOfLines={1}>{educationText}</Text>
                                     </View>
                                     <View style={styles.detail}>
                                         <Icon name="briefcase" size={scale(14)} color="#666" />
-                                        <Text style={styles.detailText} numberOfLines={1}>{profile.profession}</Text>
+                                        <Text style={styles.detailText} numberOfLines={1}>{professionText}</Text>
                                     </View>
+
                                 </View>
                             </View>
 

@@ -153,6 +153,7 @@ export const TRANSLATIONS = {
         NO_ACCOUNT: "Don't have an account?",
         OK: 'OK',
         PASSWORD: 'Password',
+        PROFILE_ID: 'Profile ID',
 
         LOCKED_MSG: 'Must View',
         SHARE_WHATSAPP: 'Share on WhatsApp',
@@ -325,6 +326,7 @@ export const TRANSLATIONS = {
         NO_ACCOUNT: "கணக்கு இல்லையா?",
         OK: 'சரி',
         PASSWORD: 'கடவுச்சொல்',
+        PROFILE_ID: 'சுயவிவர ஐடி',
 
         LOCKED_MSG: 'காண வேண்டும்',
         SHARE_WHATSAPP: 'WhatsApp-ல் பகிர',
