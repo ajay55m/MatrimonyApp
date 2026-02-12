@@ -89,7 +89,7 @@ const RegistrationScreen = ({ navigation }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
     const [formData, setFormData] = useState({
-        martialStatus: "",
+        maritalStatus: "",
         marriageType: '',       // Widow | Divorce
         marriageReason: '',
         hasChildren: '',        // Yes | No
@@ -329,131 +329,7 @@ const RegistrationScreen = ({ navigation }) => {
 
                             </View>
                         </View>
-                        <ModernSelect
-                            label="திருமண நிலை"
-                            value={formData.maritalStatus}
-                            icon="ring"
-                            items={[
-                                { label: 'திருமணம் ஆகவில்லை', value: 'Unmarried' },
-                                { label: 'திருமணம் ஆனது', value: 'Married' },
-                            ]}
-                            onChange={(val) => {
-                                updateField('maritalStatus', val);
 
-                                // reset married fields if unmarried
-                                if (val !== 'Married') {
-                                    updateField('marriageType', '');
-                                    updateField('marriageReason', '');
-                                    updateField('hasChildren', '');
-                                    updateField('children', []);
-                                }
-                            }}
-                        />
-                        {formData.maritalStatus === 'Married' && (
-                            <View style={styles.marriedCard}>
-                                <Text style={styles.marriedTitle}>முந்தைய திருமண விவரங்கள்</Text>
-
-                                {/* Widow / Divorce */}
-                                <ModernSelect
-                                    label="திருமண நிலை வகை"
-                                    value={formData.marriageType}
-                                    icon="account-question"
-                                    items={[
-                                        {
-                                            label: `${widowTamilLabel} (${widowLabel})`,
-                                            value: widowLabel,
-                                        },
-                                        {
-                                            label: 'விவாகரத்து (Divorce)',
-                                            value: 'Divorce',
-                                        },
-                                    ]}
-
-                                    onChange={(val) => updateField('marriageType', val)}
-                                />
-
-                                {/* Reason */}
-                                <ModernInput
-                                    label="காரணம்"
-                                    value={formData.marriageReason}
-                                    onChangeText={(t) => updateField('marriageReason', t)}
-                                    placeholder="காரணம் குறிப்பிடவும்"
-                                    multiline
-                                    icon="text"
-                                />
-
-                                {/* Has children */}
-                                <ModernSelect
-                                    label="குழந்தைகள் உள்ளதா?"
-                                    value={formData.hasChildren}
-                                    icon="baby-face-outline"
-                                    items={[
-                                        { label: 'ஆம்', value: 'Yes' },
-                                        { label: 'இல்லை', value: 'No' },
-                                    ]}
-                                    onChange={(val) => {
-                                        updateField('hasChildren', val);
-                                        if (val === 'No') updateField('children', []);
-                                    }}
-                                />
-
-                                {/* Children details */}
-                                {formData.hasChildren === 'Yes' && (
-                                    <>
-                                        <ModernSelect
-                                            label="குழந்தைகள் எண்ணிக்கை"
-                                            value={formData.children.length.toString()}
-                                            icon="counter"
-                                            items={[1, 2, 3, 4].map(n => ({
-                                                label: n.toString(),
-                                                value: n.toString(),
-                                            }))}
-                                            onChange={(val) => {
-                                                const count = parseInt(val);
-                                                updateField(
-                                                    'children',
-                                                    Array.from({ length: count }, () => ({ gender: '', age: '' }))
-                                                );
-                                            }}
-                                        />
-
-                                        {formData.children.map((child, index) => (
-                                            <View key={index} style={styles.childRow}>
-                                                <Text style={styles.childTitle}>குழந்தை {index + 1}</Text>
-
-                                                <ModernSelect
-                                                    label="பாலினம்"
-                                                    value={child.gender}
-                                                    icon="gender-male-female"
-                                                    items={[
-                                                        { label: 'ஆண்', value: 'Male' },
-                                                        { label: 'பெண்', value: 'Female' },
-                                                    ]}
-                                                    onChange={(val) => {
-                                                        const updated = [...formData.children];
-                                                        updated[index].gender = val;
-                                                        updateField('children', updated);
-                                                    }}
-                                                />
-
-                                                <ModernInput
-                                                    label="வயது"
-                                                    value={child.age}
-                                                    keyboardType="numeric"
-                                                    placeholder="வயது"
-                                                    icon="calendar"
-                                                    onChangeText={(t) => {
-                                                        const updated = [...formData.children];
-                                                        updated[index].age = t;
-                                                        updateField('children', updated);
-                                                    }}
-                                                />
-                                            </View>
-                                        ))}
-                                    </>
-                                )}
-                            </View>
-                        )}
 
                         <View style={styles.formRow}>
                             <View style={styles.formCol}>
@@ -559,7 +435,131 @@ const RegistrationScreen = ({ navigation }) => {
                                 </View>
 
                                 <ModernInput label="மாத வருமானம்" value={formData.income} onChangeText={(t) => updateField('income', t)} placeholder="₹ ரூபாயில்" keyboardType="numeric" icon="currency-inr" />
+                                <ModernSelect
+                                    label="திருமண நிலை"
+                                    value={formData.maritalStatus}
+                                    icon="ring"
+                                    items={[
+                                        { label: 'திருமணம் ஆகவில்லை', value: 'Unmarried' },
+                                        { label: 'திருமணம் ஆனது', value: 'Married' },
+                                    ]}
+                                    onChange={(val) => {
+                                        updateField('maritalStatus', val);
 
+                                        // reset married fields if unmarried
+                                        if (val !== 'Married') {
+                                            updateField('marriageType', '');
+                                            updateField('marriageReason', '');
+                                            updateField('hasChildren', '');
+                                            updateField('children', []);
+                                        }
+                                    }}
+                                />
+                                {formData.maritalStatus === 'Married' && (
+                                    <View style={styles.marriedCard}>
+                                        <Text style={styles.marriedTitle}>முந்தைய திருமண விவரங்கள்</Text>
+
+                                        {/* Widow / Divorce */}
+                                        <ModernSelect
+                                            label="திருமண நிலை வகை"
+                                            value={formData.marriageType}
+                                            icon="account-question"
+                                            items={[
+                                                {
+                                                    label: `${widowTamilLabel} (${widowLabel})`,
+                                                    value: widowLabel,
+                                                },
+                                                {
+                                                    label: 'விவாகரத்து (Divorce)',
+                                                    value: 'Divorce',
+                                                },
+                                            ]}
+
+                                            onChange={(val) => updateField('marriageType', val)}
+                                        />
+
+                                        {/* Reason */}
+                                        <ModernInput
+                                            label="காரணம்"
+                                            value={formData.marriageReason}
+                                            onChangeText={(t) => updateField('marriageReason', t)}
+                                            placeholder="காரணம் குறிப்பிடவும்"
+                                            multiline
+                                            icon="text"
+                                        />
+
+                                        {/* Has children */}
+                                        <ModernSelect
+                                            label="குழந்தைகள் உள்ளதா?"
+                                            value={formData.hasChildren}
+                                            icon="baby-face-outline"
+                                            items={[
+                                                { label: 'ஆம்', value: 'Yes' },
+                                                { label: 'இல்லை', value: 'No' },
+                                            ]}
+                                            onChange={(val) => {
+                                                updateField('hasChildren', val);
+                                                if (val === 'No') updateField('children', []);
+                                            }}
+                                        />
+
+                                        {/* Children details */}
+                                        {formData.hasChildren === 'Yes' && (
+                                            <>
+                                                <ModernSelect
+                                                    label="குழந்தைகள் எண்ணிக்கை"
+                                                    value={formData.children.length.toString()}
+                                                    icon="counter"
+                                                    items={[1, 2, 3, 4].map(n => ({
+                                                        label: n.toString(),
+                                                        value: n.toString(),
+                                                    }))}
+                                                    onChange={(val) => {
+                                                        const count = parseInt(val);
+                                                        updateField(
+                                                            'children',
+                                                            Array.from({ length: count }, () => ({ gender: '', age: '' }))
+                                                        );
+                                                    }}
+                                                />
+
+                                                {formData.children.map((child, index) => (
+                                                    <View key={index} style={styles.childRow}>
+                                                        <Text style={styles.childTitle}>குழந்தை {index + 1}</Text>
+
+                                                        <ModernSelect
+                                                            label="பாலினம்"
+                                                            value={child.gender}
+                                                            icon="gender-male-female"
+                                                            items={[
+                                                                { label: 'ஆண்', value: 'Male' },
+                                                                { label: 'பெண்', value: 'Female' },
+                                                            ]}
+                                                            onChange={(val) => {
+                                                                const updated = [...formData.children];
+                                                                updated[index].gender = val;
+                                                                updateField('children', updated);
+                                                            }}
+                                                        />
+
+                                                        <ModernInput
+                                                            label="வயது"
+                                                            value={child.age}
+                                                            keyboardType="numeric"
+                                                            placeholder="வயது"
+                                                            icon="calendar"
+                                                            onChangeText={(t) => {
+                                                                const updated = [...formData.children];
+                                                                updated[index].age = t;
+                                                                updateField('children', updated);
+                                                            }}
+                                                        />
+                                                    </View>
+                                                ))}
+                                            </>
+                                        )}
+                                    </View>
+                                )}
                                 <View style={styles.siblingsSheetCard}>
                                     <Text style={styles.siblingsTitleSheet}>உடன்பிறப்புகள்</Text>
                                     <View style={styles.siblingCounters}>
