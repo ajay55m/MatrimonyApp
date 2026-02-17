@@ -10,6 +10,9 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { scale, moderateScale, width } from '../utils/responsive';
+import { searchProfiles } from '../services/profileService';
+import { ActivityIndicator } from 'react-native';
+import ModalSelector from './ModalSelector';
 
 const COLORS = {
     primary: '#ef5c0dff',
@@ -24,14 +27,20 @@ const COLORS = {
 };
 
 const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
-    const [searchMode, setSearchMode] = useState(isLoggedIn ? 'advanced' : 'normal');
+    const [searchMode, setSearchMode] = useState('normal');
+    const [loading, setLoading] = useState(false);
+
+    // Modal States
+    const [ageModalVisible, setAgeModalVisible] = useState(false);
+    const [ageFromModalVisible, setAgeFromModalVisible] = useState(false);
+    const [ageToModalVisible, setAgeToModalVisible] = useState(false);
 
     // Normal Filters (Quick Search)
     const [filters, setFilters] = useState({
         lookingFor: 'BRIDE',
         age: '18',
         religion: 'SELECT_RELIGION',
-        caste: 'NADAR'
+        caste: 'Nadar'
     });
 
     // Advanced Filters
@@ -64,9 +73,151 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
         setAdvFilters(prev => ({ ...prev, [key]: options[nextIdx] }));
     };
 
-    const handleSearch = () => {
-        if (onSearch) {
-            onSearch({ mode: searchMode, filters: searchMode === 'normal' ? filters : advFilters });
+    const handleSearch = async () => {
+        setLoading(true);
+
+        try {
+            const currentFilters =
+                searchMode === 'normal' ? filters : advFilters;
+
+            const apiPayload = {};
+
+            /* =============================
+               NORMAL SEARCH
+            ============================= */
+            if (searchMode === 'normal') {
+
+                // Gender Mapping
+                apiPayload.gender =
+                    currentFilters.lookingFor === 'BRIDE'
+                        ? 'Female'
+                        : 'Male';
+
+                // Age Mapping (Selected age to 70)
+                apiPayload.age_from = parseInt(currentFilters.age);
+                apiPayload.age_to = 60;
+
+                // Religion
+                if (
+                    currentFilters.religion &&
+                    currentFilters.religion !== 'SELECT_RELIGION'
+                ) {
+                    apiPayload.religion = currentFilters.religion;
+                }
+
+                // Caste
+                if (
+                    currentFilters.caste &&
+                    currentFilters.caste !== 'SELECT_CASTE'
+                ) {
+                    apiPayload.caste = currentFilters.caste;
+                }
+            }
+
+            /* =============================
+               ADVANCED SEARCH
+            ============================= */
+            else {
+
+                // Profile ID
+                if (currentFilters.searchId) {
+                    apiPayload.profile_id = currentFilters.searchId;
+                }
+
+                // Gender
+                apiPayload.gender =
+                    currentFilters.seeking === 'WOMAN'
+                        ? 'Female'
+                        : 'Male';
+
+                // Age Range
+                apiPayload.age_from = currentFilters.ageFrom;
+                apiPayload.age_to = currentFilters.ageTo;
+
+                // District
+                if (
+                    currentFilters.district &&
+                    currentFilters.district !== 'SELECT_DISTRICT'
+                ) {
+                    apiPayload.district = currentFilters.district;
+                }
+
+                // Religion
+                if (
+                    currentFilters.religion &&
+                    currentFilters.religion !== 'SELECT_RELIGION'
+                ) {
+                    apiPayload.religion = currentFilters.religion;
+                }
+
+                // Education
+                if (
+                    currentFilters.qualification &&
+                    currentFilters.qualification !== 'SELECT_QUALIFICATION'
+                ) {
+                    apiPayload.education = currentFilters.qualification;
+                }
+
+                // Occupation
+                if (
+                    currentFilters.work &&
+                    currentFilters.work !== 'SELECT_WORK'
+                ) {
+                    apiPayload.occupation = currentFilters.work;
+                }
+
+                // Raasi
+                if (
+                    currentFilters.raasi &&
+                    currentFilters.raasi !== 'SELECT_RAASI'
+                ) {
+                    apiPayload.raasi = currentFilters.raasi;
+                }
+
+                // Complexion
+                if (
+                    currentFilters.color &&
+                    currentFilters.color !== 'SELECT_COLOR'
+                ) {
+                    apiPayload.complexion = currentFilters.color;
+                }
+
+                // Body Type (if jewel used as body_type)
+                if (
+                    currentFilters.jewel &&
+                    currentFilters.jewel !== 'SELECT_JEWEL'
+                ) {
+                    apiPayload.body_type = currentFilters.jewel;
+                }
+            }
+
+            console.log("Final API Payload:", apiPayload);
+
+            const result = await searchProfiles(apiPayload);
+
+            if (onSearch) {
+                onSearch({
+                    mode: searchMode,
+                    filters: currentFilters,
+                    results: result.status ? result.data : [],
+                    count: result.count || 0
+                });
+            }
+
+        } catch (error) {
+            console.log("Search Error:", error);
+
+            if (onSearch) {
+                onSearch({
+                    mode: searchMode,
+                    filters: searchMode === 'normal' ? filters : advFilters, // Fixed reference to use local var if needed, but safe to use state here
+                    results: [],
+                    count: 0,
+                    error: true
+                });
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -123,7 +274,7 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                             </View>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.inputGroup} onPress={() => cycleNormalFilter('age', ageOptions)}>
+                        <TouchableOpacity style={styles.inputGroup} onPress={() => setAgeModalVisible(true)}>
                             <Text style={styles.label}>{t('AGE')}</Text>
                             <View style={styles.pickerBox}>
                                 <Text style={styles.pickerText}>{filters.age}</Text>
@@ -139,7 +290,7 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                             </View>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.inputGroup} onPress={() => cycleNormalFilter('caste', ['NADAR'])}>
+                        <TouchableOpacity style={styles.inputGroup} onPress={() => cycleNormalFilter('caste', ['Nadar'])}>
                             <Text style={styles.label}>{t('CASTE')}</Text>
                             <View style={styles.pickerBox}>
                                 <Text style={styles.pickerText}>{t(filters.caste)}</Text>
@@ -173,12 +324,12 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                         <View style={styles.fullWidthInputGroup}>
                             <Text style={styles.label}>{t('AGE')} <Text style={{ color: 'red' }}>*</Text></Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                                <TouchableOpacity style={[styles.pickerBox, { flex: 1 }]} onPress={() => cycleAdvFilter('ageFrom', ageOptions)}>
+                                <TouchableOpacity style={[styles.pickerBox, { flex: 1 }]} onPress={() => setAgeFromModalVisible(true)}>
                                     <Text style={styles.pickerText}>{advFilters.ageFrom}</Text>
                                     <Icon name="chevron-down" size={16} color={COLORS.textSub} />
                                 </TouchableOpacity>
                                 <Text>-</Text>
-                                <TouchableOpacity style={[styles.pickerBox, { flex: 1 }]} onPress={() => cycleAdvFilter('ageTo', ageOptions)}>
+                                <TouchableOpacity style={[styles.pickerBox, { flex: 1 }]} onPress={() => setAgeToModalVisible(true)}>
                                     <Text style={styles.pickerText}>{advFilters.ageTo}</Text>
                                     <Icon name="chevron-down" size={16} color={COLORS.textSub} />
                                 </TouchableOpacity>
@@ -217,12 +368,41 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
 
                 <TouchableOpacity style={styles.searchBtn} activeOpacity={0.8} onPress={handleSearch}>
                     <LinearGradient colors={[COLORS.ctaGradientStart, COLORS.ctaGradientEnd]} style={styles.searchBtnGradient}>
-                        <Text style={styles.searchBtnText}>
-                            {searchMode === 'normal' ? t('SEARCH_BTN') : t('SUBMIT')}
-                        </Text>
+                        {loading ? (
+                            <ActivityIndicator color={COLORS.white} size="small" />
+                        ) : (
+                            <Text style={styles.searchBtnText}>
+                                {searchMode === 'normal' ? t('SEARCH_BTN') : t('SUBMIT')}
+                            </Text>
+                        )}
                     </LinearGradient>
                 </TouchableOpacity>
             </View>
+            {/* Modals */}
+            <ModalSelector
+                visible={ageModalVisible}
+                options={ageOptions}
+                selectedValue={filters.age}
+                onSelect={(val) => setFilters(prev => ({ ...prev, age: val }))}
+                onClose={() => setAgeModalVisible(false)}
+                title={t('AGE')}
+            />
+            <ModalSelector
+                visible={ageFromModalVisible}
+                options={ageOptions}
+                selectedValue={advFilters.ageFrom}
+                onSelect={(val) => setAdvFilters(prev => ({ ...prev, ageFrom: val }))}
+                onClose={() => setAgeFromModalVisible(false)}
+                title={`${t('AGE')} (From)`}
+            />
+            <ModalSelector
+                visible={ageToModalVisible}
+                options={ageOptions}
+                selectedValue={advFilters.ageTo}
+                onSelect={(val) => setAdvFilters(prev => ({ ...prev, ageTo: val }))}
+                onClose={() => setAgeToModalVisible(false)}
+                title={`${t('AGE')} (To)`}
+            />
         </View>
     );
 };

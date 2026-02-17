@@ -83,7 +83,10 @@ const SearchScreen = () => {
 
     const handleSearch = (searchData) => {
         console.log('Searching with:', searchData);
-        navigation.navigate('Profiles');
+        navigation.navigate('Profiles', {
+            searchResults: searchData.results,
+            isSearch: true
+        });
     };
 
     return (

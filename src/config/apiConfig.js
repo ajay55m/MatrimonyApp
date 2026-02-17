@@ -9,6 +9,7 @@ export const ENDPOINTS = {
     LOGIN: `${BASE_URL}/login.php`,
     REGISTER: `${BASE_URL}/register.php`,
     SELECTED_PROFILES: `${BASE_URL}/selected-profiles.php`,
+    SEARCH_PROFILES: `${BASE_URL}/search_profiles.php`,
 };
 
 export default {

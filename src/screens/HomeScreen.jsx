@@ -66,7 +66,11 @@ const HomeScreen = ({ activeTab, onLoginPress, t }) => {
 
     const performSearch = (searchData) => {
         console.log('Searching with:', searchData);
-        navigation.navigate('Search');
+        // Navigate directly to Profiles to show results
+        navigation.navigate('Profiles', {
+            searchResults: searchData.results,
+            isSearch: true
+        });
     };
 
     const handleBackToSearch = () => {
