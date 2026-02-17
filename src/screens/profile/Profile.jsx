@@ -148,7 +148,10 @@ const ProfileScreen = () => {
         const district = getLabel(LOCATION_MAP, profile.district);
         const city = getLabel(LOCATION_MAP, profile.city);
         const locationParts = [city, district].filter(p => p && p !== '0' && p !== '1' && p !== 'Unknown');
-        const locationLabel = locationParts.length > 0 ? locationParts.join(', ') : (profile.location || 'Tamil Nadu');
+        // Prioritize specific backend location (which may be Tamil) if available, otherwise fallback to reconstruction
+        const locationLabel = (profile.location && profile.location !== 'Unknown')
+            ? profile.location
+            : (locationParts.length > 0 ? locationParts.join(', ') : 'Tamil Nadu');
 
         // Height Construction
         let heightLabel = '5ft 5in'; // Default/Fallback
@@ -216,7 +219,7 @@ const ProfileScreen = () => {
                         <View style={styles.infoContainer}>
                             {/* Name and Age Row */}
                             <View style={styles.nameRow}>
-                                <Text style={styles.name} numberOfLines={1}>{profile.name}</Text>
+                                <Text style={styles.name} numberOfLines={2}>{profile.name}</Text>
                                 <View style={styles.ageBadge}>
                                     <Text style={styles.ageText}>{profile.age} Yrs</Text>
                                 </View>
@@ -614,6 +617,7 @@ const styles = StyleSheet.create({
         color: '#000000',
         flexShrink: 1, // Allow text wrapping if needed
         lineHeight: moderateScale(24),
+        fontFamily: 'NotoSansTamil-Bold',
     },
     ageBadge: {
         backgroundColor: '#FCE4EC', // Pink Badge
@@ -650,6 +654,7 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         flex: 1,
         lineHeight: moderateScale(18),
+        fontFamily: 'NotoSansTamil-Regular',
     },
     bottomRow: {
         flexDirection: 'row',

@@ -12,7 +12,8 @@ export const loginUser = async (profileId, password) => {
         const response = await fetch(ENDPOINTS.LOGIN, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Accept': 'application/json',
             },
             body: body,
         });

@@ -14,6 +14,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Skeleton from '../components/Skeleton';
 import { scale, moderateScale } from '../utils/responsive';
+import { getProfile } from '../services/profileService';
+import 'text-encoding-polyfill'; // Ensure polyfill availability for profileService
 
 const { width } = Dimensions.get('window');
 
@@ -51,7 +53,46 @@ const Dashboard = ({ t }) => {
             try {
                 const data = await AsyncStorage.getItem('userData');
                 if (data) {
-                    setUserData(JSON.parse(data));
+                    const parsedData = JSON.parse(data);
+
+                    // Initial load from storage to show something quickly
+                    setUserData(parsedData);
+
+                    // Fetch fresh profile data to ensure latest details (especially Tamil names)
+                    // Try ID variations: profile_id, correct ID from login response
+                    const idToFetch = parsedData.profile_id || parsedData.m_id || parsedData.id || parsedData.user_id;
+                    console.log("Dashboard: Fetching profile for ID:", idToFetch);
+
+                    if (idToFetch) {
+                        try {
+                            const profileResult = await getProfile(idToFetch);
+                            console.log("Full Profile Fetch Result:", profileResult);
+
+                            if (profileResult && profileResult.status && profileResult.data) {
+                                // Prioritize Tamil Profile or Main Profile
+                                const liveProfile = profileResult.data.tamil_profile || profileResult.data.main_profile;
+
+                                if (liveProfile) {
+                                    // Merge live data on top of stored data
+                                    // Map live 'user_name' to 'username' key used in UI if needed, or update UI to use user_name
+                                    const updatedData = {
+                                        ...parsedData,
+                                        ...liveProfile,
+                                        username: liveProfile.user_name || liveProfile.name || liveProfile.username || liveProfile.profile_name,
+                                        user_photo: liveProfile.user_photo,
+                                        photo_data1: liveProfile.photo_data1,
+                                        client_id: liveProfile.m_id || liveProfile.client_id || liveProfile.profile_id || parsedData.client_id,
+                                    };
+                                    setUserData(updatedData);
+
+                                    // Optional: Update storage to keep it fresh
+                                    AsyncStorage.setItem('userData', JSON.stringify(updatedData));
+                                }
+                            }
+                        } catch (fetchErr) {
+                            console.log("Background profile fetch failed", fetchErr);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Failed to load user data', error);
@@ -86,8 +127,15 @@ const Dashboard = ({ t }) => {
                 <View style={styles.profileSummary}>
                     <View style={styles.avatarRing}>
                         <Image
-                            source={require('../assets/images/avatar_male.png')}
+                            source={
+                                userData?.user_photo
+                                    ? { uri: `https://nadarmahamai.com/uploads/${userData.user_photo}` }
+                                    : (userData?.photo_data1
+                                        ? { uri: `https://nadarmahamai.com/uploads/${userData.photo_data1}` }
+                                        : require('../assets/images/avatar_male.png'))
+                            }
                             style={styles.headerAvatar}
+                            resizeMode="cover"
                         />
                         <View style={styles.statusIndicator} />
                     </View>
@@ -129,9 +177,9 @@ const Dashboard = ({ t }) => {
             <Text style={styles.sectionTitle}>{t('Quick Info')}</Text>
             <View style={styles.statsGrid}>
                 {[
-                    { value: '0', label: t('New Messages'), gradient: ['#FF4081', '#FF80AB'], icon: 'message-text' },
-                    { value: '0', label: t('Profile Views'), gradient: ['#42A5F5', '#64B5F6'], icon: 'eye' },
-                    { value: '0', label: t('Monthly Visitors'), gradient: ['#4CAF50', '#66BB6A'], icon: 'account-group' },
+                    { value: userData?.user_points || '0', label: t('Points'), gradient: ['#FF4081', '#FF80AB'], icon: 'star-circle' },
+                    { value: userData?.viewed_profiles || '0', label: t('Profile Views'), gradient: ['#42A5F5', '#64B5F6'], icon: 'eye' },
+                    { value: userData?.no_sel_profiles || '0', label: t('Selected Profiles'), gradient: ['#4CAF50', '#66BB6A'], icon: 'heart-multiple' },
                     { value: '0', label: t('Connect Requests'), gradient: ['#FF4081', '#FF80AB'], icon: 'account-heart' },
                 ].map((item, index) => (
                     <TouchableOpacity
@@ -180,7 +228,13 @@ const Dashboard = ({ t }) => {
 
             <TouchableOpacity style={styles.sidebarAvatar}>
                 <Image
-                    source={require('../assets/images/avatar_male.png')}
+                    source={
+                        userData?.user_photo
+                            ? { uri: `https://nadarmahamai.com/uploads/${userData.user_photo}` }
+                            : (userData?.photo_data1
+                                ? { uri: `https://nadarmahamai.com/uploads/${userData.photo_data1}` }
+                                : require('../assets/images/avatar_male.png'))
+                    }
                     style={styles.sidebarAvatarImage}
                 />
                 <View style={styles.uploadBadge}>
@@ -200,7 +254,7 @@ const Dashboard = ({ t }) => {
                     <View style={[styles.linkIconBg, { backgroundColor: '#FFE5EF' }]}>
                         <Icon name="heart" size={18} color={COLORS.primary} />
                     </View>
-                    <Text style={styles.sidebarLinkText}>{t('Selected Profiles')} (1)</Text>
+                    <Text style={styles.sidebarLinkText}>{t('Selected Profiles')} ({userData?.no_sel_profiles || '0'})</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.sidebarLinkItem}>
@@ -215,7 +269,7 @@ const Dashboard = ({ t }) => {
                 <View style={styles.sidebarInfoItem}>
                     <Icon name="eye-outline" size={16} color={COLORS.blue} />
                     <Text style={styles.sidebarInfoText}>{t('Total Views')}</Text>
-                    <Text style={styles.sidebarInfoValueInline}>1/50</Text>
+                    <Text style={styles.sidebarInfoValueInline}>{userData?.viewed_profiles || '0'}/50</Text>
                 </View>
 
                 <View style={styles.sidebarDivider} />
@@ -223,7 +277,7 @@ const Dashboard = ({ t }) => {
                 <View style={styles.sidebarInfoItem}>
                     <Icon name="calendar-alert" size={16} color={COLORS.danger} />
                     <Text style={styles.sidebarInfoText}>{t('Membership Ends')}</Text>
-                    <Text style={[styles.sidebarInfoValueInline, { color: COLORS.danger }]}>09-01-2027</Text>
+                    <Text style={[styles.sidebarInfoValueInline, { color: COLORS.danger }]}>{userData?.mem_end_date || '09-01-2027'}</Text>
                 </View>
             </View>
         </View>
@@ -236,15 +290,15 @@ const Dashboard = ({ t }) => {
             <View style={styles.membershipCard}>
                 <View style={styles.membershipRow}>
                     <Text style={styles.membershipLabel}>{t('Join Date:')}</Text>
-                    <Text style={styles.membershipValue}>09-01-2026</Text>
+                    <Text style={styles.membershipValue}>{userData?.reg_date || '0000-00-00'}</Text>
                 </View>
                 <View style={styles.membershipRow}>
                     <Text style={styles.membershipLabel}>{t('Active Membership plan:')}</Text>
-                    <Text style={[styles.membershipValue, { color: COLORS.success }]}>Free</Text>
+                    <Text style={[styles.membershipValue, { color: COLORS.success }]}>{userData?.mem_plan === '0' ? 'Free' : 'Premium'}</Text>
                 </View>
                 <View style={styles.membershipRow}>
                     <Text style={styles.membershipLabel}>{t('Your Profile Viewers:')}</Text>
-                    <Text style={styles.membershipValue}>0</Text>
+                    <Text style={styles.membershipValue}>{userData?.profile_visitors || '0'}</Text>
                 </View>
                 <View style={styles.membershipNote}>
                     <Text style={styles.membershipNoteText}>
@@ -286,6 +340,9 @@ const Dashboard = ({ t }) => {
     );
 };
 
+// Font Constant
+const TAMIL_FONT = 'NotoSansTamil-Regular';
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -326,6 +383,7 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontSize: 24,
         fontWeight: 'bold',
+        fontFamily: TAMIL_FONT,
     },
     notificationBtn: {
         width: 44,
@@ -445,6 +503,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: COLORS.textPrimary,
         marginBottom: 15,
+        fontFamily: TAMIL_FONT,
     },
 
     // Stats Grid
@@ -529,6 +588,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: COLORS.textPrimary,
         marginBottom: 2,
+        fontFamily: TAMIL_FONT,
     },
     profileId: {
         fontSize: 13,
@@ -582,6 +642,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: COLORS.textPrimary,
         fontWeight: '500',
+        fontFamily: TAMIL_FONT,
     },
     sidebarDivider: {
         height: 1,
@@ -598,6 +659,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 13,
         color: COLORS.textSecondary,
+        fontFamily: TAMIL_FONT,
     },
     sidebarInfoValue: {
         fontSize: 14,
@@ -605,12 +667,14 @@ const styles = StyleSheet.create({
         color: COLORS.textPrimary,
         marginLeft: 24,
         marginTop: 4,
+        fontFamily: TAMIL_FONT,
     },
     sidebarInfoValueInline: {
         fontSize: 13,
         fontWeight: '600',
         color: COLORS.textPrimary,
         marginLeft: 'auto',
+        fontFamily: TAMIL_FONT,
     },
 
     // Membership Section
@@ -629,6 +693,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: COLORS.textPrimary,
         marginBottom: 16,
+        fontFamily: TAMIL_FONT,
     },
     membershipCard: {
         gap: 0,
@@ -644,11 +709,13 @@ const styles = StyleSheet.create({
     membershipLabel: {
         fontSize: moderateScale(14),
         color: COLORS.textSecondary,
+        fontFamily: TAMIL_FONT,
     },
     membershipValue: {
         fontSize: moderateScale(14),
         fontWeight: '600',
         color: COLORS.textPrimary,
+        fontFamily: TAMIL_FONT,
     },
     membershipNote: {
         backgroundColor: '#FFEBEE',

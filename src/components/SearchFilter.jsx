@@ -26,6 +26,27 @@ const COLORS = {
     gold: '#F59E0B',
 };
 
+// ─────────────────────────────────────────────────────────────
+// Helper: returns true when a value is a real selection
+// (not empty, not a "SELECT_*" placeholder)
+// ─────────────────────────────────────────────────────────────
+const isValidSelection = (value) =>
+    value &&
+    value.trim() !== '' &&
+    !value.startsWith('SELECT_');
+
+// ─────────────────────────────────────────────────────────────
+// Helper: validate & normalise age range
+//   • ensures both values are numbers inside [18, 90]
+//   • swaps them if from > to
+// ─────────────────────────────────────────────────────────────
+const normaliseAgeRange = (from, to) => {
+    let f = Math.max(18, Math.min(90, parseInt(from, 10) || 18));
+    let t = Math.max(18, Math.min(90, parseInt(to, 10) || 90));
+    if (f > t) [f, t] = [t, f]; // swap silently
+    return { ageFrom: String(f), ageTo: String(t) };
+};
+
 const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
     const [searchMode, setSearchMode] = useState('normal');
     const [loading, setLoading] = useState(false);
@@ -35,15 +56,15 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
     const [ageFromModalVisible, setAgeFromModalVisible] = useState(false);
     const [ageToModalVisible, setAgeToModalVisible] = useState(false);
 
-    // Normal Filters (Quick Search)
+    // ── Normal Filters (Quick Search) ──────────────────────────
     const [filters, setFilters] = useState({
         lookingFor: 'BRIDE',
         age: '18',
         religion: 'SELECT_RELIGION',
-        caste: 'Nadar'
+        caste: 'SELECT_CASTE',   // ← was hard-coded 'Nadar'; now a real filter
     });
 
-    // Advanced Filters
+    // ── Advanced Filters ───────────────────────────────────────
     const [advFilters, setAdvFilters] = useState({
         searchId: '',
         seeking: 'WOMAN',
@@ -52,13 +73,14 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
         district: 'SELECT_DISTRICT',
         city: 'SELECT_CITY',
         religion: 'SELECT_RELIGION',
+        caste: 'SELECT_CASTE',          // ← added
         nativeDirection: 'SELECT_DIRECTION',
         qualification: 'SELECT_QUALIFICATION',
         work: 'SELECT_WORK',
         raasi: 'SELECT_RAASI',
-        star: 'SELECT_STAR',
+        star: 'SELECT_STAR',            // ← now properly wired
         color: 'SELECT_COLOR',
-        jewel: 'SELECT_JEWEL'
+        jewel: 'SELECT_JEWEL',          // ← maps to jewel column
     });
 
     const cycleNormalFilter = (key, options) => {
@@ -73,121 +95,127 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
         setAdvFilters(prev => ({ ...prev, [key]: options[nextIdx] }));
     };
 
+    // ─────────────────────────────────────────────────────────────
+    // Age-To modal handler with auto-correction
+    // ─────────────────────────────────────────────────────────────
+    const handleAgeToSelect = (val) => {
+        const { ageFrom, ageTo } = normaliseAgeRange(advFilters.ageFrom, val);
+        setAdvFilters(prev => ({ ...prev, ageFrom, ageTo }));
+    };
+
+    const handleAgeFromSelect = (val) => {
+        const { ageFrom, ageTo } = normaliseAgeRange(val, advFilters.ageTo);
+        setAdvFilters(prev => ({ ...prev, ageFrom, ageTo }));
+    };
+
+    // ─────────────────────────────────────────────────────────────
+    // Build API payload & call backend
+    // ─────────────────────────────────────────────────────────────
     const handleSearch = async () => {
         setLoading(true);
 
         try {
-            const currentFilters =
-                searchMode === 'normal' ? filters : advFilters;
+            const apiPayload = { limit: 50 };
 
-            const apiPayload = {};
-
-            /* =============================
+            /* ══════════════════════════════════════
                NORMAL SEARCH
-            ============================= */
+            ══════════════════════════════════════ */
             if (searchMode === 'normal') {
 
-                // Gender Mapping
-                apiPayload.gender =
-                    currentFilters.lookingFor === 'BRIDE'
-                        ? 'Female'
-                        : 'Male';
+                // Gender
+                apiPayload.gender = filters.lookingFor === 'BRIDE' ? 'Female' : 'Male';
 
-                // Age Mapping (Selected age to 70)
-                apiPayload.age_from = parseInt(currentFilters.age);
-                apiPayload.age_to = 60;
+                // Age (use chosen age as minimum; 60 as ceiling)
+                const ageInt = parseInt(filters.age, 10) || 18;
+                apiPayload.age_from = String(ageInt);
+                apiPayload.age_to = '60';
 
-                // Religion
-                if (
-                    currentFilters.religion &&
-                    currentFilters.religion !== 'SELECT_RELIGION'
-                ) {
-                    apiPayload.religion = currentFilters.religion;
+                // Religion – only if a real value is chosen
+                if (isValidSelection(filters.religion)) {
+                    apiPayload.religion = filters.religion;
                 }
 
-                // Caste
-                if (
-                    currentFilters.caste &&
-                    currentFilters.caste !== 'SELECT_CASTE'
-                ) {
-                    apiPayload.caste = currentFilters.caste;
+                // Caste – only if a real value is chosen
+                if (isValidSelection(filters.caste)) {
+                    apiPayload.caste = filters.caste;
                 }
             }
 
-            /* =============================
+            /* ══════════════════════════════════════
                ADVANCED SEARCH
-            ============================= */
+            ══════════════════════════════════════ */
             else {
 
                 // Profile ID
-                if (currentFilters.searchId) {
-                    apiPayload.profile_id = currentFilters.searchId;
+                if (advFilters.searchId.trim()) {
+                    apiPayload.profile_id = advFilters.searchId.trim();
                 }
 
                 // Gender
                 apiPayload.gender =
-                    currentFilters.seeking === 'WOMAN'
-                        ? 'Female'
-                        : 'Male';
+                    advFilters.seeking === 'WOMAN' ? 'Female' : 'Male';
 
-                // Age Range
-                apiPayload.age_from = currentFilters.ageFrom;
-                apiPayload.age_to = currentFilters.ageTo;
+                // Age Range – validate before sending
+                const { ageFrom, ageTo } = normaliseAgeRange(
+                    advFilters.ageFrom,
+                    advFilters.ageTo
+                );
+                apiPayload.age_from = ageFrom;
+                apiPayload.age_to = ageTo;
 
                 // District
-                if (
-                    currentFilters.district &&
-                    currentFilters.district !== 'SELECT_DISTRICT'
-                ) {
-                    apiPayload.district = currentFilters.district;
+                if (isValidSelection(advFilters.district)) {
+                    apiPayload.district = advFilters.district;
+                }
+
+                // City  ← previously missing
+                if (isValidSelection(advFilters.city)) {
+                    apiPayload.city = advFilters.city;
                 }
 
                 // Religion
-                if (
-                    currentFilters.religion &&
-                    currentFilters.religion !== 'SELECT_RELIGION'
-                ) {
-                    apiPayload.religion = currentFilters.religion;
+                if (isValidSelection(advFilters.religion)) {
+                    apiPayload.religion = advFilters.religion;
                 }
 
-                // Education
-                if (
-                    currentFilters.qualification &&
-                    currentFilters.qualification !== 'SELECT_QUALIFICATION'
-                ) {
-                    apiPayload.education = currentFilters.qualification;
+                // Caste  ← previously missing
+                if (isValidSelection(advFilters.caste)) {
+                    apiPayload.caste = advFilters.caste;
                 }
 
-                // Occupation
-                if (
-                    currentFilters.work &&
-                    currentFilters.work !== 'SELECT_WORK'
-                ) {
-                    apiPayload.occupation = currentFilters.work;
+                // Native Direction  ← previously missing
+                if (isValidSelection(advFilters.nativeDirection)) {
+                    apiPayload.native_direction = advFilters.nativeDirection;
+                }
+
+                // Education / Qualification
+                if (isValidSelection(advFilters.qualification)) {
+                    apiPayload.education = advFilters.qualification;
+                }
+
+                // Occupation / Work
+                if (isValidSelection(advFilters.work)) {
+                    apiPayload.occupation = advFilters.work;
                 }
 
                 // Raasi
-                if (
-                    currentFilters.raasi &&
-                    currentFilters.raasi !== 'SELECT_RAASI'
-                ) {
-                    apiPayload.raasi = currentFilters.raasi;
+                if (isValidSelection(advFilters.raasi)) {
+                    apiPayload.raasi = advFilters.raasi;
                 }
 
-                // Complexion
-                if (
-                    currentFilters.color &&
-                    currentFilters.color !== 'SELECT_COLOR'
-                ) {
-                    apiPayload.complexion = currentFilters.color;
+                // Star  ← previously missing
+                if (isValidSelection(advFilters.star)) {
+                    apiPayload.star = advFilters.star;
                 }
 
-                // Body Type (if jewel used as body_type)
-                if (
-                    currentFilters.jewel &&
-                    currentFilters.jewel !== 'SELECT_JEWEL'
-                ) {
-                    apiPayload.body_type = currentFilters.jewel;
+                // Complexion / Color
+                if (isValidSelection(advFilters.color)) {
+                    apiPayload.complexion = advFilters.color;
+                }
+
+                // Jewel  ← now its own column (not body_type)
+                if (isValidSelection(advFilters.jewel)) {
+                    apiPayload.jewel = advFilters.jewel;
                 }
             }
 
@@ -195,12 +223,25 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
 
             const result = await searchProfiles(apiPayload);
 
+            // Sort results by ascending age to ensure filtered age (e.g. 34) appears first
+            try {
+                if (result.status && Array.isArray(result.data)) {
+                    result.data.sort((a, b) => {
+                        const ageA = parseInt(a.age, 10) || 0;
+                        const ageB = parseInt(b.age, 10) || 0;
+                        return ageA - ageB;
+                    });
+                }
+            } catch (sortError) {
+                console.warn("Sorting failed, displaying unsorted results:", sortError);
+            }
+
             if (onSearch) {
                 onSearch({
                     mode: searchMode,
-                    filters: currentFilters,
+                    filters: searchMode === 'normal' ? filters : advFilters,
                     results: result.status ? result.data : [],
-                    count: result.count || 0
+                    count: result.count || 0,
                 });
             }
 
@@ -210,10 +251,10 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
             if (onSearch) {
                 onSearch({
                     mode: searchMode,
-                    filters: searchMode === 'normal' ? filters : advFilters, // Fixed reference to use local var if needed, but safe to use state here
+                    filters: searchMode === 'normal' ? filters : advFilters,
                     results: [],
                     count: 0,
-                    error: true
+                    error: true,
                 });
             }
         } finally {
@@ -264,9 +305,12 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                 )}
 
                 {searchMode === 'normal' ? (
-                    /* Normal Search Form (Quick Search) */
+                    /* ── Normal / Quick Search Form ──────────────────── */
                     <View style={styles.formGrid}>
-                        <TouchableOpacity style={styles.inputGroup} onPress={() => cycleNormalFilter('lookingFor', ['BRIDE', 'GROOM'])}>
+                        <TouchableOpacity
+                            style={styles.inputGroup}
+                            onPress={() => cycleNormalFilter('lookingFor', ['BRIDE', 'GROOM'])}
+                        >
                             <Text style={styles.label}>{t('SEEKING')}</Text>
                             <View style={styles.pickerBox}>
                                 <Text style={styles.pickerText}>{t(filters.lookingFor === 'BRIDE' ? 'WOMAN' : 'MAN')}</Text>
@@ -274,7 +318,10 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                             </View>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.inputGroup} onPress={() => setAgeModalVisible(true)}>
+                        <TouchableOpacity
+                            style={styles.inputGroup}
+                            onPress={() => setAgeModalVisible(true)}
+                        >
                             <Text style={styles.label}>{t('AGE')}</Text>
                             <View style={styles.pickerBox}>
                                 <Text style={styles.pickerText}>{filters.age}</Text>
@@ -282,7 +329,10 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                             </View>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.inputGroup} onPress={() => cycleNormalFilter('religion', ['SELECT_RELIGION', 'HINDU', 'CHRISTIAN'])}>
+                        <TouchableOpacity
+                            style={styles.inputGroup}
+                            onPress={() => cycleNormalFilter('religion', ['SELECT_RELIGION', 'HINDU', 'CHRISTIAN'])}
+                        >
                             <Text style={styles.label}>{t('RELIGION')}</Text>
                             <View style={styles.pickerBox}>
                                 <Text style={styles.pickerText}>{t(filters.religion)}</Text>
@@ -290,16 +340,22 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                             </View>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.inputGroup} onPress={() => cycleNormalFilter('caste', ['Nadar'])}>
+                        {/* ← Caste now properly cycles and sends to API */}
+                        <TouchableOpacity
+                            style={styles.inputGroup}
+                            onPress={() => cycleNormalFilter('caste', ['SELECT_CASTE', 'Nadar', 'Mudaliar', 'Gounder'])}
+                        >
                             <Text style={styles.label}>{t('CASTE')}</Text>
                             <View style={styles.pickerBox}>
-                                <Text style={styles.pickerText}>{t(filters.caste)}</Text>
+                                <Text style={styles.pickerText}>
+                                    {isValidSelection(filters.caste) ? filters.caste : t('SELECT_CASTE')}
+                                </Text>
                                 <Icon name="chevron-down" size={16} color={COLORS.textSub} />
                             </View>
                         </TouchableOpacity>
                     </View>
                 ) : (
-                    /* Advanced Search Form (Premium Card UI Style) */
+                    /* ── Advanced Search Form ─────────────────────────── */
                     <View>
                         <Text style={styles.sectionHeaderTitle}>General</Text>
 
@@ -309,11 +365,16 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                                 style={styles.textInputBox}
                                 placeholder=""
                                 value={advFilters.searchId}
-                                onChangeText={(text) => setAdvFilters(prev => ({ ...prev, searchId: text }))}
+                                onChangeText={(text) =>
+                                    setAdvFilters(prev => ({ ...prev, searchId: text }))
+                                }
                             />
                         </View>
 
-                        <TouchableOpacity style={styles.fullWidthInputGroup} onPress={() => cycleAdvFilter('seeking', ['WOMAN', 'MAN'])}>
+                        <TouchableOpacity
+                            style={styles.fullWidthInputGroup}
+                            onPress={() => cycleAdvFilter('seeking', ['WOMAN', 'MAN'])}
+                        >
                             <Text style={styles.label}>{t('SEEKING')} <Text style={{ color: 'red' }}>*</Text></Text>
                             <View style={styles.pickerBox}>
                                 <Text style={styles.pickerText}>{t(advFilters.seeking)}</Text>
@@ -324,12 +385,18 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                         <View style={styles.fullWidthInputGroup}>
                             <Text style={styles.label}>{t('AGE')} <Text style={{ color: 'red' }}>*</Text></Text>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                                <TouchableOpacity style={[styles.pickerBox, { flex: 1 }]} onPress={() => setAgeFromModalVisible(true)}>
+                                <TouchableOpacity
+                                    style={[styles.pickerBox, { flex: 1 }]}
+                                    onPress={() => setAgeFromModalVisible(true)}
+                                >
                                     <Text style={styles.pickerText}>{advFilters.ageFrom}</Text>
                                     <Icon name="chevron-down" size={16} color={COLORS.textSub} />
                                 </TouchableOpacity>
                                 <Text>-</Text>
-                                <TouchableOpacity style={[styles.pickerBox, { flex: 1 }]} onPress={() => setAgeToModalVisible(true)}>
+                                <TouchableOpacity
+                                    style={[styles.pickerBox, { flex: 1 }]}
+                                    onPress={() => setAgeToModalVisible(true)}
+                                >
                                     <Text style={styles.pickerText}>{advFilters.ageTo}</Text>
                                     <Icon name="chevron-down" size={16} color={COLORS.textSub} />
                                 </TouchableOpacity>
@@ -339,16 +406,50 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
 
                         <View style={styles.formGrid}>
                             {[
-                                { label: t('DISTRICT'), key: 'district', opts: ['SELECT_DISTRICT', 'CHENNAI', 'MADURAI', 'TIRUNELVELI'] },
-                                { label: t('CITY'), key: 'city', opts: ['SELECT_CITY', 'ADYAR', 'ANNA_NAGAR', 'T_NAGAR'] },
-                                { label: t('RELIGION'), key: 'religion', opts: ['SELECT_RELIGION', 'HINDU', 'CHRISTIAN'] },
-                                { label: t('NATIVE_DIRECTION'), key: 'nativeDirection', opts: ['SELECT_DIRECTION', 'NORTH', 'SOUTH', 'EAST', 'WEST'] },
-                                { label: t('QUALIFICATION'), key: 'qualification', opts: ['SELECT_QUALIFICATION', 'BE', 'MBBS', 'BCOM', 'MSC'] },
-                                { label: t('WORK'), key: 'work', opts: ['SELECT_WORK', 'PRIVATE', 'GOVERNMENT', 'BUSINESS', 'TEACHER', 'ENGINEER', 'DOCTOR'] },
-                                { label: t('RAASI'), key: 'raasi', opts: ['SELECT_RAASI', 'MESHAM', 'RISHABAM', 'MITHUNAM'] },
-                                { label: t('STAR'), key: 'star', opts: ['SELECT_STAR', 'ASHWINI', 'BHARANI'] },
-                                { label: t('COLOR'), key: 'color', opts: ['SELECT_COLOR', 'FAIR', 'WHEATISH', 'DARK'] },
-                                { label: t('JEWEL'), key: 'jewel', opts: ['SELECT_JEWEL', 'YES', 'NO'] },
+                                {
+                                    label: t('DISTRICT'), key: 'district',
+                                    opts: ['SELECT_DISTRICT', 'CHENNAI', 'MADURAI', 'TIRUNELVELI'],
+                                },
+                                {
+                                    label: t('CITY'), key: 'city',
+                                    opts: ['SELECT_CITY', 'ADYAR', 'ANNA_NAGAR', 'T_NAGAR'],
+                                },
+                                {
+                                    label: t('RELIGION'), key: 'religion',
+                                    opts: ['SELECT_RELIGION', 'HINDU', 'CHRISTIAN'],
+                                },
+                                {
+                                    label: t('CASTE'), key: 'caste',           // ← added
+                                    opts: ['SELECT_CASTE', 'Nadar', 'Mudaliar', 'Gounder'],
+                                },
+                                {
+                                    label: t('NATIVE_DIRECTION'), key: 'nativeDirection',
+                                    opts: ['SELECT_DIRECTION', 'NORTH', 'SOUTH', 'EAST', 'WEST'],
+                                },
+                                {
+                                    label: t('QUALIFICATION'), key: 'qualification',
+                                    opts: ['SELECT_QUALIFICATION', 'BE', 'MBBS', 'BCOM', 'MSC'],
+                                },
+                                {
+                                    label: t('WORK'), key: 'work',
+                                    opts: ['SELECT_WORK', 'PRIVATE', 'GOVERNMENT', 'BUSINESS', 'TEACHER', 'ENGINEER', 'DOCTOR'],
+                                },
+                                {
+                                    label: t('RAASI'), key: 'raasi',
+                                    opts: ['SELECT_RAASI', 'MESHAM', 'RISHABAM', 'MITHUNAM'],
+                                },
+                                {
+                                    label: t('STAR'), key: 'star',            // ← now wired
+                                    opts: ['SELECT_STAR', 'ASHWINI', 'BHARANI'],
+                                },
+                                {
+                                    label: t('COLOR'), key: 'color',
+                                    opts: ['SELECT_COLOR', 'FAIR', 'WHEATISH', 'DARK'],
+                                },
+                                {
+                                    label: t('JEWEL'), key: 'jewel',          // ← jewel column
+                                    opts: ['SELECT_JEWEL', 'YES', 'NO'],
+                                },
                             ].map((field, idx) => (
                                 <TouchableOpacity
                                     key={idx}
@@ -367,7 +468,10 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                 )}
 
                 <TouchableOpacity style={styles.searchBtn} activeOpacity={0.8} onPress={handleSearch}>
-                    <LinearGradient colors={[COLORS.ctaGradientStart, COLORS.ctaGradientEnd]} style={styles.searchBtnGradient}>
+                    <LinearGradient
+                        colors={[COLORS.ctaGradientStart, COLORS.ctaGradientEnd]}
+                        style={styles.searchBtnGradient}
+                    >
                         {loading ? (
                             <ActivityIndicator color={COLORS.white} size="small" />
                         ) : (
@@ -378,7 +482,8 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                     </LinearGradient>
                 </TouchableOpacity>
             </View>
-            {/* Modals */}
+
+            {/* ── Modals ─────────────────────────────────────────── */}
             <ModalSelector
                 visible={ageModalVisible}
                 options={ageOptions}
@@ -391,7 +496,7 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                 visible={ageFromModalVisible}
                 options={ageOptions}
                 selectedValue={advFilters.ageFrom}
-                onSelect={(val) => setAdvFilters(prev => ({ ...prev, ageFrom: val }))}
+                onSelect={handleAgeFromSelect}              // ← validates range
                 onClose={() => setAgeFromModalVisible(false)}
                 title={`${t('AGE')} (From)`}
             />
@@ -399,7 +504,7 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                 visible={ageToModalVisible}
                 options={ageOptions}
                 selectedValue={advFilters.ageTo}
-                onSelect={(val) => setAdvFilters(prev => ({ ...prev, ageTo: val }))}
+                onSelect={handleAgeToSelect}                // ← validates range
                 onClose={() => setAgeToModalVisible(false)}
                 title={`${t('AGE')} (To)`}
             />
@@ -410,7 +515,7 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
 const styles = StyleSheet.create({
     searchWrapper: {
         marginHorizontal: 0,
-        backgroundColor: '#FDF1DE', // Original yellow-tint background
+        backgroundColor: '#FDF1DE',
         borderRadius: scale(20),
         padding: scale(20),
         marginBottom: scale(30),
@@ -469,7 +574,7 @@ const styles = StyleSheet.create({
         gap: scale(10),
     },
     inputGroup: {
-        width: '48%', // 2 columns on phones
+        width: '48%',
         marginBottom: scale(10),
     },
     label: {

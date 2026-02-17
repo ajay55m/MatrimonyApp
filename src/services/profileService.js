@@ -11,7 +11,8 @@ export const getSelectedProfiles = async (tamilClientId) => {
         const response = await fetch(ENDPOINTS.SELECTED_PROFILES, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Accept': 'application/json',
             },
             body: body,
         });
@@ -65,27 +66,25 @@ export const searchProfiles = async (searchParams) => {
         const response = await fetch(ENDPOINTS.SEARCH_PROFILES, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Accept': 'application/json',
             },
             body: body,
         });
 
-        const text = await response.text();
-        console.log('Search response:', text.substring(0, 200));
-
-        let result;
-        try {
-            result = JSON.parse(text);
-        } catch (e) {
-            console.error('Failed to parse search response JSON', e);
-            throw new Error('Invalid server response');
-        }
+        const result = await response.json();
+        console.log('Search response:', JSON.stringify(result).substring(0, 200));
 
         if (!response.ok) {
             throw new Error('Search request failed: ' + (result.message || response.status));
         }
 
         if (result.status && Array.isArray(result.data)) {
+            // Limit results to 50 for performance
+            if (result.data.length > 50) {
+                result.data = result.data.slice(0, 50);
+            }
+
             // Map data to match ProfileScreen expected format
             result.data = result.data.map(profile => ({
                 ...profile,
@@ -128,5 +127,43 @@ export const searchProfiles = async (searchParams) => {
     } catch (error) {
         console.error('Search profiles error:', error);
         return { status: false, message: 'Network error or search failed' };
+    }
+};
+
+/**
+ * Get Specific Profile Details
+ * @param {string} profileId
+ */
+export const getProfile = async (profileId) => {
+    try {
+        const body = `profile_id=${encodeURIComponent(profileId)}`;
+
+        const response = await fetch(ENDPOINTS.GET_PROFILE, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Accept': 'application/json',
+            },
+            body: body,
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch profile details');
+        }
+
+        // Force buffer read to handle encoding manually
+        const buffer = await response.arrayBuffer();
+        const decoder = new TextDecoder('utf-8');
+        const text = decoder.decode(buffer);
+
+        // If the text still contains "?????", it might be double-encoded or ISO-8859-1
+        // But since you confirmed the backend sends correct JSON in your browser test,
+        // strict UTF-8 decoding of the buffer is usually the safest bet for fetch() in RN.
+
+        const result = JSON.parse(text);
+        return result;
+    } catch (error) {
+        console.error('Get profile error:', error);
+        return { status: false, message: 'Network error or server unavailable' };
     }
 };
