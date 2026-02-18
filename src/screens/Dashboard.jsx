@@ -15,7 +15,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Skeleton from '../components/Skeleton';
 import { scale, moderateScale } from '../utils/responsive';
 import { getProfile } from '../services/profileService';
-import 'text-encoding-polyfill'; // Ensure polyfill availability for profileService
+
 
 const { width } = Dimensions.get('window');
 
@@ -66,11 +66,12 @@ const Dashboard = ({ t }) => {
                     if (idToFetch) {
                         try {
                             const profileResult = await getProfile(idToFetch);
-                            console.log("Full Profile Fetch Result:", profileResult);
+                            console.log("Full Profile Fetch Result:", JSON.stringify(profileResult, null, 2));
 
                             if (profileResult && profileResult.status && profileResult.data) {
                                 // Prioritize Tamil Profile or Main Profile
                                 const liveProfile = profileResult.data.tamil_profile || profileResult.data.main_profile;
+                                console.log("Live Profile Data Extracted:", liveProfile);
 
                                 if (liveProfile) {
                                     // Merge live data on top of stored data
@@ -83,6 +84,7 @@ const Dashboard = ({ t }) => {
                                         photo_data1: liveProfile.photo_data1,
                                         client_id: liveProfile.m_id || liveProfile.client_id || liveProfile.profile_id || parsedData.client_id,
                                     };
+                                    console.log("Final Merged User Data:", updatedData);
                                     setUserData(updatedData);
 
                                     // Optional: Update storage to keep it fresh
@@ -116,7 +118,7 @@ const Dashboard = ({ t }) => {
                 <View style={styles.headerTop}>
                     <View style={styles.headerText}>
                         <Text style={styles.greeting}>{t('GOOD_MORNING')}</Text>
-                        <Text style={styles.headerName}>{userData?.username || 'User'}</Text>
+                        <Text style={styles.headerName}>{userData?.user_name || userData?.name || userData?.username || 'User'}</Text>
                     </View>
                     <TouchableOpacity style={styles.notificationBtn}>
                         <Icon name="bell-outline" size={24} color="#FFF" />
@@ -222,7 +224,7 @@ const Dashboard = ({ t }) => {
         <View style={styles.sidebarCard}>
             <View style={styles.welcomeHeader}>
                 <Text style={styles.welcomeLabel}>Welcome,</Text>
-                <Text style={styles.sidebarWelcomeText}>{userData?.username || 'User'}</Text>
+                <Text style={styles.sidebarWelcomeText}>{userData?.user_name || userData?.name || userData?.username || 'User'}</Text>
                 <Text style={styles.profileId}>{userData?.client_id || '...'}</Text>
             </View>
 

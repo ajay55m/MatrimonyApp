@@ -165,104 +165,109 @@ const ProfileScreen = () => {
 
         return (
             <View key={profileId} style={styles.cardWrapper}>
-                <View style={styles.profileCard}>
-                    {/* Header: ID (Left) | Status (Right) */}
-                    <View style={styles.cardHeader}>
-                        <View style={styles.profileBadge}>
-                            {/* Icon removed to match target design */}
-                            <Text style={styles.profileIdText}>{profileId}</Text>
+                <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => navigation.navigate('ProfileDetails', { profile })}
+                >
+                    <View style={styles.profileCard}>
+                        {/* Header: ID (Left) | Status (Right) */}
+                        <View style={styles.cardHeader}>
+                            <View style={styles.profileBadge}>
+                                {/* Icon removed to match target design */}
+                                <Text style={styles.profileIdText}>{profileId}</Text>
+                            </View>
+                            <View style={styles.statusBadge}>
+                                <View style={[styles.statusDot, { backgroundColor: '#F57C00' }]} />
+                                <Text style={styles.statusText}>{lastActiveText}</Text>
+                            </View>
                         </View>
-                        <View style={styles.statusBadge}>
-                            <View style={[styles.statusDot, { backgroundColor: '#F57C00' }]} />
-                            <Text style={styles.statusText}>{lastActiveText}</Text>
+
+                        {/* Main Content */}
+                        <View style={styles.cardBody}>
+                            {/* Left: Avatar + Stacked Badges */}
+                            <View style={styles.avatarContainer}>
+                                <View style={styles.avatarOuterRing}>
+                                    {/* Use a simple container for the image/icon, border handled by OuterRing */}
+                                    <View style={styles.avatarInner}>
+                                        {profile.profile_image ? (
+                                            <Image
+                                                source={{ uri: profile.profile_image }}
+                                                style={styles.avatar}
+                                                resizeMode="cover"
+                                            />
+                                        ) : (
+                                            <LinearGradient
+                                                colors={['#64B5F6', '#1976D2']} // Blue gradient for no-avatar
+                                                style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
+                                            >
+                                                <Icon name="account" size={scale(35)} color="#FFFFFF" />
+                                            </LinearGradient>
+                                        )}
+                                    </View>
+                                </View>
+
+                                {/* Stacked Badges below Avatar */}
+                                <View style={styles.matchScoreContainer}>
+                                    <View style={styles.verifiedBadgeSmall}>
+                                        <Icon name="check-circle" size={scale(11)} color="#2E7D32" />
+                                        <Text style={styles.badgeLabelSmall}>Viewed</Text>
+                                    </View>
+                                    <View style={styles.horoscopeBadgeSmall}>
+                                        <Icon name="camera" size={scale(11)} color="#EF6C00" />
+                                        <Text style={styles.badgeLabelSmall}>Photo Req</Text>
+                                    </View>
+                                </View>
+                            </View>
+
+                            {/* Right: Info Area */}
+                            <View style={styles.infoContainer}>
+                                {/* Name and Age Row */}
+                                <View style={styles.nameRow}>
+                                    <Text style={styles.name} numberOfLines={2}>{profile.name}</Text>
+                                    <View style={styles.ageBadge}>
+                                        <Text style={styles.ageText}>{profile.age} Yrs</Text>
+                                    </View>
+                                </View>
+
+                                {/* Details Grid - 2 columns */}
+                                <View style={styles.detailsGrid}>
+                                    <View style={styles.detailCol}>
+                                        <View style={styles.detail}>
+                                            <Icon name="human-male-height" size={scale(14)} color="#757575" />
+                                            <Text style={styles.detailText}>{heightLabel}</Text>
+                                        </View>
+                                        <View style={styles.detail}>
+                                            <Icon name="om" size={scale(14)} color="#757575" />
+                                            <Text style={styles.detailText}>{religionLabel}</Text>
+                                        </View>
+                                        <View style={styles.detail}>
+                                            <Icon name="account-group" size={scale(14)} color="#757575" />
+                                            <Text style={styles.detailText}>{casteLabel}</Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.detailCol}>
+                                        <View style={styles.detail}>
+                                            <Icon name="map-marker" size={scale(14)} color="#757575" />
+                                            <Text style={styles.detailText} numberOfLines={1}>{locationLabel}</Text>
+                                        </View>
+                                        <View style={styles.detail}>
+                                            <Icon name="school" size={scale(14)} color="#757575" />
+                                            <Text style={styles.detailText} numberOfLines={1}>{educationLabel}</Text>
+                                        </View>
+                                        <View style={styles.detail}>
+                                            <Icon name="briefcase" size={scale(14)} color="#757575" />
+                                            <Text style={styles.detailText} numberOfLines={1}>{occupationLabel}</Text>
+                                        </View>
+                                    </View>
+                                </View>
+
+                                {/* Register Button - Only if requested, but current feedback suggests 'incomplete design' implies missing details/layout */}
+                                {/* We keep it minimal or remove if not in target. I will keep it but make it match the card width if needed. */}
+                            </View>
                         </View>
                     </View>
-
-                    {/* Main Content */}
-                    <View style={styles.cardBody}>
-                        {/* Left: Avatar + Stacked Badges */}
-                        <View style={styles.avatarContainer}>
-                            <View style={styles.avatarOuterRing}>
-                                {/* Use a simple container for the image/icon, border handled by OuterRing */}
-                                <View style={styles.avatarInner}>
-                                    {profile.profile_image ? (
-                                        <Image
-                                            source={{ uri: profile.profile_image }}
-                                            style={styles.avatar}
-                                            resizeMode="cover"
-                                        />
-                                    ) : (
-                                        <LinearGradient
-                                            colors={['#64B5F6', '#1976D2']} // Blue gradient for no-avatar
-                                            style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
-                                        >
-                                            <Icon name="account" size={scale(35)} color="#FFFFFF" />
-                                        </LinearGradient>
-                                    )}
-                                </View>
-                            </View>
-
-                            {/* Stacked Badges below Avatar */}
-                            <View style={styles.matchScoreContainer}>
-                                <View style={styles.verifiedBadgeSmall}>
-                                    <Icon name="check-circle" size={scale(11)} color="#2E7D32" />
-                                    <Text style={styles.badgeLabelSmall}>Viewed</Text>
-                                </View>
-                                <View style={styles.horoscopeBadgeSmall}>
-                                    <Icon name="camera" size={scale(11)} color="#EF6C00" />
-                                    <Text style={styles.badgeLabelSmall}>Photo Req</Text>
-                                </View>
-                            </View>
-                        </View>
-
-                        {/* Right: Info Area */}
-                        <View style={styles.infoContainer}>
-                            {/* Name and Age Row */}
-                            <View style={styles.nameRow}>
-                                <Text style={styles.name} numberOfLines={2}>{profile.name}</Text>
-                                <View style={styles.ageBadge}>
-                                    <Text style={styles.ageText}>{profile.age} Yrs</Text>
-                                </View>
-                            </View>
-
-                            {/* Details Grid - 2 columns */}
-                            <View style={styles.detailsGrid}>
-                                <View style={styles.detailCol}>
-                                    <View style={styles.detail}>
-                                        <Icon name="human-male-height" size={scale(14)} color="#757575" />
-                                        <Text style={styles.detailText}>{heightLabel}</Text>
-                                    </View>
-                                    <View style={styles.detail}>
-                                        <Icon name="om" size={scale(14)} color="#757575" />
-                                        <Text style={styles.detailText}>{religionLabel}</Text>
-                                    </View>
-                                    <View style={styles.detail}>
-                                        <Icon name="account-group" size={scale(14)} color="#757575" />
-                                        <Text style={styles.detailText}>{casteLabel}</Text>
-                                    </View>
-                                </View>
-
-                                <View style={styles.detailCol}>
-                                    <View style={styles.detail}>
-                                        <Icon name="map-marker" size={scale(14)} color="#757575" />
-                                        <Text style={styles.detailText} numberOfLines={1}>{locationLabel}</Text>
-                                    </View>
-                                    <View style={styles.detail}>
-                                        <Icon name="school" size={scale(14)} color="#757575" />
-                                        <Text style={styles.detailText} numberOfLines={1}>{educationLabel}</Text>
-                                    </View>
-                                    <View style={styles.detail}>
-                                        <Icon name="briefcase" size={scale(14)} color="#757575" />
-                                        <Text style={styles.detailText} numberOfLines={1}>{occupationLabel}</Text>
-                                    </View>
-                                </View>
-                            </View>
-
-                            {/* Register Button - Only if requested, but current feedback suggests 'incomplete design' implies missing details/layout */}
-                            {/* We keep it minimal or remove if not in target. I will keep it but make it match the card width if needed. */}
-                        </View>
-                    </View>
-                </View>
+                </TouchableOpacity>
             </View>
         );
     };

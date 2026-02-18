@@ -55,6 +55,8 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
     const [ageModalVisible, setAgeModalVisible] = useState(false);
     const [ageFromModalVisible, setAgeFromModalVisible] = useState(false);
     const [ageToModalVisible, setAgeToModalVisible] = useState(false);
+    const [qualificationModalVisible, setQualificationModalVisible] = useState(false);
+    const [workModalVisible, setWorkModalVisible] = useState(false);
 
     // ── Normal Filters (Quick Search) ──────────────────────────
     const [filters, setFilters] = useState({
@@ -264,6 +266,53 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
 
     const ageOptions = Array.from({ length: 73 }, (_, i) => (i + 18).toString());
 
+    const qualificationOptions = [
+        'SELECT_QUALIFICATION',
+        'Engineer',
+        'Doctor',
+        'Lawyer',
+        'Master Degree',
+        'Master Degree With B.Ed',
+        'Degree With B.Ed',
+        'Degree',
+        'Diplamo',
+        'ITI',
+        'HSC',
+        'SSLC',
+        'School',
+        'Auditor',
+        '8th'
+    ];
+
+    const workOptions = [
+        'SELECT_WORK',
+        'Programmer',
+        'Bank',
+        'Private',
+        'Project Manager',
+        'Lecturer',
+        'Asst Professor',
+        'Mechanical Engineer',
+        'Engineer Marketing',
+        'Technical Officer',
+        'Legal Services',
+        'Manufacturing / Distributions',
+        'Medical / Health Services',
+        'Politics / Government / Military',
+        'Real Estate',
+        'Sales / Marketing',
+        'Science',
+        'Technical / Engineering',
+        'Transportation',
+        'Food Service',
+        'Other',
+        'Software Engineer',
+        'NoJob',
+        'Railway Department',
+        'Business',
+        'Civil Engineer'
+    ];
+
     return (
         <View style={styles.searchWrapper}>
             {/* Top Navigation Bar - Only show if logged in */}
@@ -428,11 +477,11 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                                 },
                                 {
                                     label: t('QUALIFICATION'), key: 'qualification',
-                                    opts: ['SELECT_QUALIFICATION', 'BE', 'MBBS', 'BCOM', 'MSC'],
+                                    // opts removed, handled via modal
                                 },
                                 {
                                     label: t('WORK'), key: 'work',
-                                    opts: ['SELECT_WORK', 'PRIVATE', 'GOVERNMENT', 'BUSINESS', 'TEACHER', 'ENGINEER', 'DOCTOR'],
+                                    // opts removed, handled via modal
                                 },
                                 {
                                     label: t('RAASI'), key: 'raasi',
@@ -448,13 +497,32 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                                 },
                                 {
                                     label: t('JEWEL'), key: 'jewel',          // ← jewel column
-                                    opts: ['SELECT_JEWEL', 'YES', 'NO'],
+                                    opts: [
+                                        'SELECT_JEWEL',
+                                        'Below 20 powns',
+                                        'Below 30 Powns',
+                                        'Below 50 Powns',
+                                        'Below 75 Powns',
+                                        'Below 100 Powns',
+                                        'below 125 Powns',
+                                        'Below 150 Powns',
+                                        'Below 200 Pown',
+                                        'Above 200 Powns',
+                                        'Below 40 Powns',
+                                        'Below 80 powns',
+                                        'Below 60 powns',
+                                        'Below 10 powns'
+                                    ],
                                 },
                             ].map((field, idx) => (
                                 <TouchableOpacity
                                     key={idx}
                                     style={styles.inputGroup}
-                                    onPress={() => cycleAdvFilter(field.key, field.opts)}
+                                    onPress={() => {
+                                        if (field.key === 'qualification') setQualificationModalVisible(true);
+                                        else if (field.key === 'work') setWorkModalVisible(true);
+                                        else cycleAdvFilter(field.key, field.opts);
+                                    }}
                                 >
                                     <Text style={styles.label}>{field.label}</Text>
                                     <View style={styles.pickerBox}>
@@ -507,6 +575,22 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                 onSelect={handleAgeToSelect}                // ← validates range
                 onClose={() => setAgeToModalVisible(false)}
                 title={`${t('AGE')} (To)`}
+            />
+            <ModalSelector
+                visible={qualificationModalVisible}
+                options={qualificationOptions}
+                selectedValue={advFilters.qualification}
+                onSelect={(val) => setAdvFilters(prev => ({ ...prev, qualification: val }))}
+                onClose={() => setQualificationModalVisible(false)}
+                title={t('QUALIFICATION')}
+            />
+            <ModalSelector
+                visible={workModalVisible}
+                options={workOptions}
+                selectedValue={advFilters.work}
+                onSelect={(val) => setAdvFilters(prev => ({ ...prev, work: val }))}
+                onClose={() => setWorkModalVisible(false)}
+                title={t('WORK')}
             />
         </View>
     );

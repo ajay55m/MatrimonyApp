@@ -151,16 +151,7 @@ export const getProfile = async (profileId) => {
             throw new Error('Failed to fetch profile details');
         }
 
-        // Force buffer read to handle encoding manually
-        const buffer = await response.arrayBuffer();
-        const decoder = new TextDecoder('utf-8');
-        const text = decoder.decode(buffer);
-
-        // If the text still contains "?????", it might be double-encoded or ISO-8859-1
-        // But since you confirmed the backend sends correct JSON in your browser test,
-        // strict UTF-8 decoding of the buffer is usually the safest bet for fetch() in RN.
-
-        const result = JSON.parse(text);
+        const result = await response.json();
         return result;
     } catch (error) {
         console.error('Get profile error:', error);
