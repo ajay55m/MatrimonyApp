@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import {
     View,
     Text,
@@ -17,6 +18,7 @@ import Skeleton from '../components/Skeleton';
 import { scale, moderateScale } from '../utils/responsive';
 import { decodeUTF8String, logUTF8String } from '../utils/utf8Helper';
 import { getProfile, getDashboardStats } from '../services/profileService';
+import { getSession } from '../utils/session';
 
 const { width } = Dimensions.get('window');
 
@@ -46,85 +48,97 @@ const COLORS = {
 
 const Dashboard = ({ t }) => {
     console.log("Dashboard Rendering");
+    const navigation = useNavigation();
     const [isLoading, setIsLoading] = useState(true);
     const [userData, setUserData] = useState(null);
 
-    useEffect(() => {
-        const loadUserData = async () => {
-            try {
-                const data = await AsyncStorage.getItem('userData');
-                if (data) {
-                    const parsedData = JSON.parse(data);
+    useFocusEffect(
+        useCallback(() => {
+            const loadUserData = async () => {
+                try {
+                    const data = await getSession('userData');
+                    if (data) {
+                        const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
 
-                    // Debug: Check what's coming from storage
-                    console.log("Raw user_name from storage:", parsedData.user_name);
-                    logUTF8String("Storage user_name", parsedData.user_name);
+                        // Debug: Check what's coming from storage
+                        const storedUsername = await getSession('username');
+                        if (storedUsername) {
+                            parsedData.username = storedUsername;
+                            // Ensure user_name is also updated if missing or just to be safe for display logic
+                            if (!parsedData.user_name) parsedData.user_name = storedUsername;
+                        }
 
-                    setUserData(parsedData);
+                        console.log("Raw user_name from storage:", parsedData.user_name);
+                        console.log("Raw username from isolated storage:", storedUsername);
+                        logUTF8String("Storage user_name", parsedData.user_name);
 
-                    // Fetch fresh profile data
-                    const idToFetch = parsedData.m_id;
+                        setUserData(parsedData);
 
-                    if (idToFetch) {
-                        try {
-                            const profileResult = await getProfile(idToFetch);
+                        // Fetch fresh profile data
+                        const idToFetch = parsedData.m_id;
 
-                            // Debug: Check what's coming from API
-                            console.log("Profile API Response:", JSON.stringify(profileResult, null, 2));
+                        if (idToFetch) {
+                            try {
+                                const profileResult = await getProfile(idToFetch);
 
-                            if (profileResult && profileResult.status && profileResult.data) {
-                                const liveProfile = profileResult.data.main_profile;
+                                // Debug: Check what's coming from API
+                                console.log("Profile API Response:", JSON.stringify(profileResult, null, 2));
 
-                                // Debug: Check the name specifically
-                                console.log("Live user_name from API:", liveProfile?.user_name);
-                                logUTF8String("API user_name", liveProfile?.user_name);
+                                if (profileResult && profileResult.status && profileResult.data) {
+                                    const liveProfile = profileResult.data.main_profile;
 
-                                let statsData = {};
-                                try {
-                                    const statsResult = await getDashboardStats(idToFetch);
-                                    if (statsResult && statsResult.status && statsResult.data) {
-                                        statsData = statsResult.data;
+                                    // Debug: Check the name specifically
+                                    console.log("Live user_name from API:", liveProfile?.user_name);
+                                    logUTF8String("API user_name", liveProfile?.user_name);
+
+                                    let statsData = {};
+                                    try {
+                                        const statsResult = await getDashboardStats(idToFetch);
+                                        if (statsResult && statsResult.status && statsResult.data) {
+                                            statsData = statsResult.data;
+                                        }
+                                    } catch (statsErr) {
+                                        console.log("Failed to fetch dashboard stats", statsErr);
                                     }
-                                } catch (statsErr) {
-                                    console.log("Failed to fetch dashboard stats", statsErr);
+
+                                    if (liveProfile) {
+                                        const updatedData = {
+                                            ...parsedData,
+                                            ...liveProfile,
+                                            ...statsData,
+                                            user_name: liveProfile.user_name || parsedData.user_name,
+                                        };
+
+                                        // Debug final merged data
+                                        console.log("Final user_name:", updatedData.user_name);
+                                        logUTF8String("Final user_name", updatedData.user_name);
+
+                                        setUserData(updatedData);
+
+                                        // Store back to AsyncStorage
+                                        await AsyncStorage.setItem('userData', JSON.stringify(updatedData));
+                                    }
                                 }
-
-                                if (liveProfile) {
-                                    const updatedData = {
-                                        ...parsedData,
-                                        ...liveProfile,
-                                        ...statsData,
-                                        user_name: liveProfile.user_name || parsedData.user_name,
-                                    };
-
-                                    // Debug final merged data
-                                    console.log("Final user_name:", updatedData.user_name);
-                                    logUTF8String("Final user_name", updatedData.user_name);
-
-                                    setUserData(updatedData);
-
-                                    // Store back to AsyncStorage
-                                    await AsyncStorage.setItem('userData', JSON.stringify(updatedData));
-                                }
+                            } catch (fetchErr) {
+                                console.log("Background profile fetch failed", fetchErr);
                             }
-                        } catch (fetchErr) {
-                            console.log("Background profile fetch failed", fetchErr);
                         }
                     }
+                } catch (error) {
+                    console.error('Failed to load user data', error);
+                } finally {
+                    setIsLoading(false);
                 }
-            } catch (error) {
-                console.error('Failed to load user data', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+            };
 
-        loadUserData();
-    }, []);
+            loadUserData();
+        }, [])
+    );
 
     // Function to safely display text with fallback
     const displayName = () => {
-        const name = userData?.user_name || userData?.name || userData?.username || 'User';
+        // Priority: username (from login/storage) -> user_name (from profile API) -> name -> 'User'
+        const name = userData?.username || userData?.user_name || userData?.name || 'User';
         // If we see question marks, log the actual value
         if (name && name.includes('?')) {
             console.log("Name contains question marks:", name);
@@ -216,6 +230,13 @@ const Dashboard = ({ t }) => {
                     <TouchableOpacity
                         key={index}
                         activeOpacity={0.8}
+                        onPress={() => {
+                            if (item.label === t('Profile Views')) {
+                                navigation.navigate('ViewedProfiles');
+                            } else if (item.label === t('Selected Profiles')) {
+                                navigation.navigate('SelectedProfiles');
+                            }
+                        }}
                     >
                         <LinearGradient
                             colors={item.gradient}
@@ -283,7 +304,10 @@ const Dashboard = ({ t }) => {
                     <Text style={styles.sidebarLinkText}>{t('View Pictures')}</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.sidebarLinkItem}>
+                <TouchableOpacity
+                    style={styles.sidebarLinkItem}
+                    onPress={() => navigation.navigate('SelectedProfiles')}
+                >
                     <View style={[styles.linkIconBg, { backgroundColor: '#FFE5EF' }]}>
                         <Icon name="heart" size={18} color={COLORS.primary} />
                     </View>
@@ -299,11 +323,16 @@ const Dashboard = ({ t }) => {
 
                 <View style={styles.sidebarDivider} />
 
-                <View style={styles.sidebarInfoItem}>
+                <View style={styles.sidebarDivider} />
+
+                <TouchableOpacity
+                    style={styles.sidebarInfoItem}
+                    onPress={() => navigation.navigate('ViewedProfiles')}
+                >
                     <Icon name="eye-outline" size={16} color={COLORS.blue} />
                     <Text style={styles.sidebarInfoText}>{t('Total Views')}</Text>
                     <Text style={styles.sidebarInfoValueInline}>{userData?.viewed_profiles || '0'}/50</Text>
-                </View>
+                </TouchableOpacity>
 
                 <View style={styles.sidebarDivider} />
 

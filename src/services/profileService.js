@@ -65,7 +65,24 @@ export const getSelectedProfiles = async (tamilClientId) => {
         });
 
         if (result && Array.isArray(result.data)) {
-            result.data = result.data.slice(0, 50);
+            result.data = result.data.map(profile => ({
+                ...profile,
+                id: profile.tamil_profile_id || profile.id || profile.profile_id,
+                profile_id: profile.profile_id || profile.id,
+                name: profile.name || profile.user_name || profile.profile_name,
+                // API response doesn't provide image path, rely on default if missing
+                profile_image: profile.user_photo
+                    ? `https://nadarmahamai.com/uploads/${profile.user_photo}`
+                    : (profile.photo_data1 ? `https://nadarmahamai.com/uploads/${profile.photo_data1}` : null),
+                age: profile.age,
+                height: profile.height || (profile.height_feet ? `${profile.height_feet}ft ${profile.height_inches}in` : ''),
+                education: (Array.isArray(profile.education) ? profile.education[0] : profile.education) || profile.padippu || '',
+                occupation: profile.occupation || profile.profession || 'Not Specified',
+                location: profile.location || profile.gplace || profile.city || profile.district || 'Unknown',
+                religion: profile.religion,
+                caste: profile.caste,
+                verified: profile.ver_flag === 1 || profile.profile_status === '1' || profile.viewed === true,
+            }));
         }
         return result;
     } catch (error) {
@@ -102,7 +119,7 @@ export const searchProfiles = async (searchParams) => {
             if (result.data.length > 50) result.data = result.data.slice(0, 50);
             result.data = result.data.map(profile => ({
                 ...profile,
-                id: profile.profile_id || profile.id,
+                id: profile.id || profile.profile_id,
                 profile_id: profile.profile_id || profile.id,
                 name: profile.user_name || profile.profile_name || profile.name,
                 profile_image: profile.user_photo
@@ -138,7 +155,7 @@ export const getProfile = async (profileId) => {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 'Accept': 'application/json',
             },
-            body: `profile_id=${encodeURIComponent(profileId)}`,
+            body: `tamil_client_id=${encodeURIComponent(profileId)}`,
         });
         return result;
     } catch (error) {
@@ -160,6 +177,44 @@ export const getDashboardStats = async (clientId) => {
         return result;
     } catch (error) {
         console.error('Get dashboard stats error:', error);
+        return { status: false, message: 'Network error or server unavailable' };
+    }
+};
+
+export const getUserProfiles = async (tamilClientId) => {
+    try {
+        const result = await fetchJSON(ENDPOINTS.USER_PROFILES, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Accept': 'application/json',
+            },
+            body: `tamil_client_id=${encodeURIComponent(tamilClientId)}`,
+        });
+
+        if (result && Array.isArray(result.data)) {
+            result.data = result.data.map(profile => ({
+                ...profile,
+                id: profile.tamil_profile_id || profile.id || profile.profile_id,
+                profile_id: profile.profile_id || profile.id,
+                name: profile.name || profile.user_name || profile.profile_name,
+                // API response doesn't provide image path, rely on default if missing
+                profile_image: profile.user_photo
+                    ? `https://nadarmahamai.com/uploads/${profile.user_photo}`
+                    : (profile.photo_data1 ? `https://nadarmahamai.com/uploads/${profile.photo_data1}` : null),
+                age: profile.age,
+                height: profile.height || (profile.height_feet ? `${profile.height_feet}ft ${profile.height_inches}in` : ''),
+                education: (Array.isArray(profile.education) ? profile.education[0] : profile.education) || profile.padippu || '',
+                occupation: profile.occupation || profile.profession || 'Not Specified',
+                location: profile.location || profile.gplace || profile.city || profile.district || 'Unknown',
+                religion: profile.religion,
+                caste: profile.caste,
+                verified: profile.ver_flag === 1 || profile.profile_status === '1' || profile.viewed === true,
+            }));
+        }
+        return result;
+    } catch (error) {
+        console.error('Get user profiles error:', error);
         return { status: false, message: 'Network error or server unavailable' };
     }
 };

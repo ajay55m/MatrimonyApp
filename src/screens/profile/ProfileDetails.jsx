@@ -30,7 +30,8 @@ const ProfileDetails = () => {
     const [menuVisible, setMenuVisible] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    const profileId = profile?.profile_id || profile?.id;
+    // Use numeric ID if available as backend expects tamil_client_id (id)
+    const profileId = profile?.id || profile?.profile_id;
 
     useEffect(() => {
         const checkLoginStatus = async () => {
@@ -76,6 +77,50 @@ const ProfileDetails = () => {
         };
         fetchFullDetails();
     }, [profileId]);
+
+    // Save viewed profile locally
+    useEffect(() => {
+        const saveViewedProfile = async () => {
+            if (!profileData || !profileId) return;
+
+            try {
+                // 1. Get existing list
+                const storedList = await AsyncStorage.getItem('viewed_profiles_list');
+                let list = storedList ? JSON.parse(storedList) : [];
+
+                // 2. Check if already viewed
+                const existingIndex = list.findIndex(p => (p.id == profileId || p.profile_id == profileId));
+
+                if (existingIndex >= 0) {
+                    // Update timestamp
+                    list[existingIndex] = { ...profileData, viewedAt: new Date().toISOString() };
+                } else {
+                    // Add new
+                    list.push({ ...profileData, viewedAt: new Date().toISOString() });
+
+                    // 3. Update User Data Count (Optimistic)
+                    const userDataJson = await AsyncStorage.getItem('userData');
+                    if (userDataJson) {
+                        const userData = JSON.parse(userDataJson);
+                        // Parse as int, increment, save as string/int
+                        let currentCount = parseInt(userData.viewed_profiles || '0');
+                        userData.viewed_profiles = currentCount + 1;
+                        await AsyncStorage.setItem('userData', JSON.stringify(userData));
+                    }
+                }
+
+                // Save list
+                await AsyncStorage.setItem('viewed_profiles_list', JSON.stringify(list));
+
+            } catch (error) {
+                console.error('Error saving viewed profile:', error);
+            }
+        };
+
+        if (profileData && (profileData.id || profileData.profile_id)) {
+            saveViewedProfile();
+        }
+    }, [profileData]);
 
     const data = profileData || {};
 
@@ -314,6 +359,11 @@ const ProfileDetails = () => {
                             value={data.mother_name ? `${data.mother_name}${data.mother_occupation ? ` (${data.mother_occupation})` : ''}` : '-'}
                             icon="human-female"
                         />
+                    </View>
+
+                    <View style={styles.sectionCard}>
+                        <SectionHeader title="Contact Address" icon="map-marker-radius" />
+                        <Text style={styles.notesText}>{getValue(data.full_address || data.address, 'No address provided.')}</Text>
                     </View>
 
                     <View style={styles.sectionCard}>

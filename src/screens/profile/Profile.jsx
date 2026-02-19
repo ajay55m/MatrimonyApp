@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getSession, isLoggedIn as checkSession } from '../../utils/session';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { getLabel, EDUCATION_MAP, OCCUPATION_MAP, RELIGION_MAP, CASTE_MAP, LOCATION_MAP } from '../../utils/dataMappings';
@@ -24,7 +25,7 @@ import { scale, moderateScale, width } from '../../utils/responsive';
 import Footer from '../../components/Footer';
 import SidebarMenu from '../../components/SidebarMenu';
 import Skeleton from '../../components/Skeleton';
-import { getSelectedProfiles } from '../../services/profileService';
+import { getUserProfiles } from '../../services/profileService';
 
 
 // Translations
@@ -51,10 +52,18 @@ const ProfileScreen = () => {
     const fetchProfiles = async () => {
         try {
             setIsLoading(true);
-            const data = await AsyncStorage.getItem('userData');
-            if (data) {
-                const user = JSON.parse(data);
-                const result = await getSelectedProfiles(user.tamil_client_id || user.client_id || user.profileid);
+            const tamilClientId = await getSession('tamil_client_id');
+            const data = await getSession('userData');
+
+            // Prioritize stored tamil_client_id, then fall back to userData fields
+            let idToUse = tamilClientId;
+            if (!idToUse && data) {
+                const user = typeof data === 'string' ? JSON.parse(data) : data;
+                idToUse = user.tamil_client_id || user.client_id || user.profileid;
+            }
+
+            if (idToUse) {
+                const result = await getUserProfiles(idToUse);
                 if (result.status && result.data) {
                     setProfiles(result.data);
                 }
@@ -69,8 +78,7 @@ const ProfileScreen = () => {
 
     const checkLoginStatus = async () => {
         try {
-            const session = await AsyncStorage.getItem('userSession');
-            const loggedIn = session === 'true';
+            const loggedIn = await checkSession();
             setIsLoggedIn(loggedIn);
             return loggedIn;
         } catch (e) {

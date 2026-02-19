@@ -9,6 +9,8 @@ import ProfileDetails from '../screens/profile/ProfileDetails';
 import ContactScreen from '../screens/profile/Contact';
 import SearchScreen from '../screens/profile/Search';
 import RegistrationScreen from '../screens/auth/RegisterScreen';
+import ViewedProfiles from '../screens/profile/ViewedProfiles';
+import SelectedProfiles from '../screens/profile/SelectedProfiles';
 
 const Stack = createNativeStackNavigator();
 
@@ -22,6 +24,8 @@ const AppNavigator = () => {
                 <Stack.Screen name="Contact" component={ContactScreen} />
                 <Stack.Screen name="Search" component={SearchScreen} />
                 <Stack.Screen name="Register" component={RegistrationScreen} />
+                <Stack.Screen name="ViewedProfiles" component={ViewedProfiles} />
+                <Stack.Screen name="SelectedProfiles" component={SelectedProfiles} />
             </Stack.Navigator>
         </NavigationContainer>
     );

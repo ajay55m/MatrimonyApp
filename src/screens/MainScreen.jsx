@@ -24,6 +24,7 @@ import Dashboard from './Dashboard';
 
 import { TRANSLATIONS } from '../constants/translations';
 import { loginUser } from '../services/authService';
+import { setSession, clearSession, isLoggedIn as checkSession } from '../utils/session';
 
 const { width } = Dimensions.get('window');
 
@@ -63,8 +64,8 @@ function MainScreen({ route }) {
 
     const checkLoginStatus = async () => {
         try {
-            const session = await AsyncStorage.getItem('userSession');
-            setIsLoggedIn(session === 'true');
+            const loggedIn = await checkSession();
+            setIsLoggedIn(loggedIn);
         } catch (e) {
             console.error('Failed to load session', e);
             setIsLoggedIn(false);
@@ -73,13 +74,7 @@ function MainScreen({ route }) {
 
     const handleLoginSuccess = async (userData) => {
         try {
-            await AsyncStorage.setItem('userSession', 'true');
-            if (userData) {
-                await AsyncStorage.setItem('userData', JSON.stringify(userData));
-                if (userData.tamil_client_id) {
-                    await AsyncStorage.setItem('tamil_client_id', userData.tamil_client_id);
-                }
-            }
+            await setSession(userData);
             setIsLoggedIn(true);
             setLoginVisible(false);
         } catch (e) {
@@ -89,9 +84,7 @@ function MainScreen({ route }) {
 
     const handleLogout = async () => {
         try {
-            await AsyncStorage.removeItem('userSession');
-            await AsyncStorage.removeItem('userData');
-            await AsyncStorage.removeItem('tamil_client_id');
+            await clearSession();
             setIsLoggedIn(false);
             setActiveTab('HOME'); // Reset to Home on logout
         } catch (e) {

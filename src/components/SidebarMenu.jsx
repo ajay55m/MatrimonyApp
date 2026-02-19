@@ -27,7 +27,7 @@ const COLORS = {
     textMain: '#1F2937',
 };
 
-const SidebarMenu = ({ menuVisible, setMenuVisible, isLoggedIn, onLogout, t }) => {
+const SidebarMenu = ({ menuVisible, setMenuVisible, isLoggedIn, onLogout, t, navigation }) => {
     const [userData, setUserData] = useState(null);
 
     useEffect(() => {
@@ -103,6 +103,7 @@ const SidebarMenu = ({ menuVisible, setMenuVisible, isLoggedIn, onLogout, t }) =
                                 {[
                                     { label: t('MY_PROFILE'), icon: 'account-circle-outline', id: 'profile', show: isLoggedIn },
                                     { label: t('MESSAGES'), icon: 'message-text-outline', id: 'messages', badgeCount: 3, show: isLoggedIn },
+                                    { label: t('Selected Profiles'), icon: 'heart', id: 'selected_profiles', show: isLoggedIn },
                                     { label: t('PREFERENCES'), icon: 'tune-vertical', id: 'preferences', show: true },
                                     { label: t('LOGOUT'), icon: 'logout', id: 'logout', show: isLoggedIn, action: onLogout },
                                 ].filter(item => item.show).map((item, index) => (
@@ -113,6 +114,12 @@ const SidebarMenu = ({ menuVisible, setMenuVisible, isLoggedIn, onLogout, t }) =
                                             if (item.action) {
                                                 item.action();
                                                 setMenuVisible(false);
+                                            } else if (item.id === 'selected_profiles' && navigation) {
+                                                setMenuVisible(false);
+                                                navigation.navigate('SelectedProfiles');
+                                            } else if (item.id === 'profile' && navigation) {
+                                                setMenuVisible(false);
+                                                navigation.navigate('Main', { initialTab: 'PROFILE' }); // Or whatever profile tab is
                                             }
                                         }}
                                     >

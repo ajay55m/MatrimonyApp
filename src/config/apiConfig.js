@@ -10,7 +10,8 @@ export const ENDPOINTS = {
     REGISTER: `${BASE_URL}/register.php`,
     SELECTED_PROFILES: `${BASE_URL}/selected-profiles.php`,
     SEARCH_PROFILES: `${BASE_URL}/search_profiles.php`,
-    GET_PROFILE: `${BASE_URL}/get-profile.php`,
+    GET_PROFILE: `${BASE_URL}/profile.php`,
+    USER_PROFILES: `${BASE_URL}/userProfile.php`,
     DASHBOARD_STATS: `${BASE_URL}/dashboard-stats.php`,
 };
 
