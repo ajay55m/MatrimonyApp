@@ -1,4 +1,5 @@
 import { ENDPOINTS } from '../config/apiConfig';
+import { parseUTF8JSON } from '../utils/utf8Helper';
 
 /**
  * Login User
@@ -13,7 +14,9 @@ export const loginUser = async (profileId, password) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                'Accept': 'application/json',
+                'Accept': 'application/json, text/plain, */*',
+                'Accept-Charset': 'utf-8',
+                'Cache-Control': 'no-cache',
             },
             body: body,
         });
@@ -22,7 +25,11 @@ export const loginUser = async (profileId, password) => {
             throw new Error('Network response was not ok');
         }
 
-        const result = await response.json();
+        // Read response as text first to ensure proper UTF-8 decoding
+        const responseText = await response.text();
+        const result = parseUTF8JSON(responseText);
+
+        console.log("Login Response Data:", JSON.stringify(result, null, 2));
         return result;
     } catch (error) {
         console.error('Login error:', error);
@@ -41,7 +48,8 @@ export const registerUser = async (formData) => {
         const response = await fetch(ENDPOINTS.REGISTER, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json; charset=UTF-8',
+                'Accept-Charset': 'utf-8',
             },
             body: JSON.stringify(formData),
         });
@@ -50,7 +58,10 @@ export const registerUser = async (formData) => {
             throw new Error('Registration failed');
         }
 
-        const result = await response.json();
+        // Read response as text first to ensure proper UTF-8 decoding
+        const responseText = await response.text();
+        const result = parseUTF8JSON(responseText);
+
         return result;
     } catch (error) {
         console.error('Registration error:', error);

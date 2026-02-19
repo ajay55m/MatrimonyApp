@@ -7,12 +7,14 @@ import {
     Image,
     TouchableOpacity,
     StatusBar,
-    ActivityIndicator
+    ActivityIndicator,
+    Platform
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { scale, moderateScale } from '../../utils/responsive';
+import { decodeUTF8String, decodeAllStrings } from '../../utils/utf8Helper';
 import { getLabel, EDUCATION_MAP, OCCUPATION_MAP, RELIGION_MAP, CASTE_MAP, LOCATION_MAP } from '../../utils/dataMappings';
 import { getProfile } from '../../services/profileService';
 import SidebarMenu from '../../components/SidebarMenu';
@@ -90,7 +92,7 @@ const ProfileDetails = () => {
 
     const getValue = (val, defaultVal = '-') => (val && val !== '' && val !== '0' ? val : defaultVal);
 
-    const name = data.user_name || data.name || data.profile_name || 'Unknown';
+    const name = decodeUTF8String(data.user_name || data.name || data.profile_name) || 'Unknown';
     const age = data.age || '-';
 
     let heightLabel = '-';
@@ -237,7 +239,7 @@ const ProfileDetails = () => {
                         </View>
 
                         <View style={styles.infoContainer}>
-                            <Text style={styles.nameText}>{name}</Text>
+                            <Text style={[styles.nameText, { fontFamily: Platform.OS === 'android' ? 'sans-serif' : 'System' }]}>{name}</Text>
 
                             {/* ID badge */}
                             <View style={styles.idBadge}>

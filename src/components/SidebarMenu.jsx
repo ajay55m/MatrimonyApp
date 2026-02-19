@@ -91,9 +91,9 @@ const SidebarMenu = ({ menuVisible, setMenuVisible, isLoggedIn, onLogout, t }) =
                                         <View>
                                             <Text style={styles.profileName}>{userData?.username || 'User'}</Text>
                                             <View style={styles.percentageContainer}>
-                                                <Text style={styles.percentageText}>{t('PROFILE')} 80% Complete</Text>
+                                                <Text style={styles.percentageText}>{t('PROFILE')} {userData?.profile_completeness || '0'}% Complete</Text>
                                                 <View style={styles.percentageBar}>
-                                                    <View style={[styles.percentageFill, { width: '80%' }]} />
+                                                    <View style={[styles.percentageFill, { width: `${userData?.profile_completeness || 0}%` }]} />
                                                 </View>
                                             </View>
                                         </View>

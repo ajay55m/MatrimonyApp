@@ -11,6 +11,7 @@ export const ENDPOINTS = {
     SELECTED_PROFILES: `${BASE_URL}/selected-profiles.php`,
     SEARCH_PROFILES: `${BASE_URL}/search_profiles.php`,
     GET_PROFILE: `${BASE_URL}/get-profile.php`,
+    DASHBOARD_STATS: `${BASE_URL}/dashboard-stats.php`,
 };
 
 export default {

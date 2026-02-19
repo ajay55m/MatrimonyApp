@@ -1,29 +1,70 @@
 import { ENDPOINTS } from '../config/apiConfig';
 
-/**
- * Get Selected Profiles (Shortlisted)
- * @param {string} clientId 
- */
+// Manual UTF-8 decoder as a safe fallback
+const manualDecodeUTF8 = (buffer) => {
+    const bytes = new Uint8Array(buffer);
+    let result = '';
+    let i = 0;
+
+    while (i < bytes.length) {
+        const c = bytes[i++];
+        if (c < 128) {
+            result += String.fromCharCode(c);
+        } else if (c >= 192 && c < 224) {
+            result += String.fromCharCode(((c & 31) << 6) | (bytes[i++] & 63));
+        } else if (c >= 224 && c < 240) {
+            result += String.fromCharCode(((c & 15) << 12) | ((bytes[i++] & 63) << 6) | (bytes[i++] & 63));
+        } else if (c >= 240 && c < 248) {
+            const val = ((c & 7) << 18) | ((bytes[i++] & 63) << 12) | ((bytes[i++] & 63) << 6) | (bytes[i++] & 63);
+            result += String.fromCharCode(0xD800 + ((val - 0x10000) >> 10), 0xDC00 + ((val - 0x10000) & 0x3FF));
+        }
+    }
+    return result;
+};
+
+// Robust fetch that forces UTF-8 decoding from raw bytes
+// This fixes the issue where PHP APIs missing 'charset=utf-8' cause Android fetch to default to Latin-1
+const fetchJSON = async (url, options) => {
+    const response = await fetch(url, options);
+    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+
+    try {
+        const buffer = await response.arrayBuffer();
+
+        // Try native TextDecoder first
+        if (typeof TextDecoder !== 'undefined') {
+            try {
+                const decoder = new TextDecoder('utf-8', { fatal: false, ignoreBOM: true });
+                const text = decoder.decode(buffer);
+                return JSON.parse(text);
+            } catch (e) {
+                console.warn('TextDecoder failed, using manual decoder', e);
+            }
+        }
+
+        // Fallback to manual decoding
+        const text = manualDecodeUTF8(buffer);
+        return JSON.parse(text);
+    } catch (e) {
+        console.error('Buffer decode error, falling back to text()', e);
+        // Last resort fallback
+        const text = await response.text();
+        return JSON.parse(text);
+    }
+};
+
 export const getSelectedProfiles = async (tamilClientId) => {
     try {
-        const body = `tamil_client_id=${encodeURIComponent(tamilClientId)}`;
-
-        const response = await fetch(ENDPOINTS.SELECTED_PROFILES, {
+        const result = await fetchJSON(ENDPOINTS.SELECTED_PROFILES, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 'Accept': 'application/json',
             },
-            body: body,
+            body: `tamil_client_id=${encodeURIComponent(tamilClientId)}`,
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch selected profiles');
-        }
-
-        const result = await response.json();
-        // Limit results to 50
-        if (result.status && Array.isArray(result.data)) {
+        if (result && Array.isArray(result.data)) {
             result.data = result.data.slice(0, 50);
         }
         return result;
@@ -33,95 +74,54 @@ export const getSelectedProfiles = async (tamilClientId) => {
     }
 };
 
-/**
- * Search Profiles based on filters
- * @param {Object} searchParams 
- */
 export const searchProfiles = async (searchParams) => {
     try {
-        // Filter out default/placeholder values
         const cleanParams = {};
-
         Object.keys(searchParams).forEach(key => {
             const value = searchParams[key];
-
-            if (
-                value !== undefined &&
-                value !== null &&
-                value !== '' &&
-                !(typeof value === 'string' && value.startsWith('SELECT_'))
-            ) {
+            if (value !== undefined && value !== null && value !== '' &&
+                !(typeof value === 'string' && value.startsWith('SELECT_'))) {
                 cleanParams[key] = value;
             }
         });
 
-
-        console.log('Searching with params:', cleanParams);
-
-        // Convert JS object to x-www-form-urlencoded format
         const body = Object.keys(cleanParams)
             .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(cleanParams[key])}`)
             .join('&');
 
-        const response = await fetch(ENDPOINTS.SEARCH_PROFILES, {
+        const result = await fetchJSON(ENDPOINTS.SEARCH_PROFILES, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 'Accept': 'application/json',
             },
-            body: body,
+            body,
         });
 
-        const result = await response.json();
-        console.log('Search response:', JSON.stringify(result).substring(0, 200));
-
-        if (!response.ok) {
-            throw new Error('Search request failed: ' + (result.message || response.status));
-        }
-
         if (result.status && Array.isArray(result.data)) {
-            // Limit results to 50 for performance
-            if (result.data.length > 50) {
-                result.data = result.data.slice(0, 50);
-            }
-
-            // Map data to match ProfileScreen expected format
+            if (result.data.length > 50) result.data = result.data.slice(0, 50);
             result.data = result.data.map(profile => ({
                 ...profile,
-                // Ensure ID is present
                 id: profile.profile_id || profile.id,
                 profile_id: profile.profile_id || profile.id,
-
-                // Name mapping
                 name: profile.user_name || profile.profile_name || profile.name,
-
-                // Image mapping (construct URL if needed or use placeholder logic)
-                profile_image: profile.user_photo ? `https://nadarmahamai.com/uploads/${profile.user_photo}` :
-                    (profile.photo_data1 ? `https://nadarmahamai.com/uploads/${profile.photo_data1}` : null),
-
-                // Defaults for UI badges
-                lastActive: profile.last_seen || 'Online', // Default to Online if missing
+                profile_image: profile.user_photo
+                    ? `https://nadarmahamai.com/uploads/${profile.user_photo}`
+                    : (profile.photo_data1 ? `https://nadarmahamai.com/uploads/${profile.photo_data1}` : null),
+                lastActive: profile.last_seen || 'Online',
                 viewed: false,
                 verified: profile.ver_flag === 1 || profile.profile_status === '1',
-
-                // Map fields if names differ
                 education: profile.padippu || (Array.isArray(profile.education) ? profile.education[0] : profile.education) || '',
                 occupation: profile.occupation || profile.profession || 'Not Specified',
                 location: profile.gplace || profile.city || profile.district || 'Unknown',
-
-                // Ensure avatar colors exist if no image (Randomize for variety)
                 avatarColor: Math.random() > 0.5 ? ['#f3f4f7', '#2C73D2'] : ['#E74C5C', '#D32F2F'],
-
-                // Maintain key fields explicitly to be safe
                 age: profile.age,
                 height: profile.height || (profile.height_feet ? `${profile.height_feet}ft ${profile.height_inches}in` : ''),
                 religion: profile.religion,
                 caste: profile.caste,
                 district: profile.district,
-                city: profile.city
+                city: profile.city,
             }));
-
-            return result;
         }
         return result;
     } catch (error) {
@@ -130,31 +130,36 @@ export const searchProfiles = async (searchParams) => {
     }
 };
 
-/**
- * Get Specific Profile Details
- * @param {string} profileId
- */
 export const getProfile = async (profileId) => {
     try {
-        const body = `profile_id=${encodeURIComponent(profileId)}`;
-
-        const response = await fetch(ENDPOINTS.GET_PROFILE, {
+        const result = await fetchJSON(ENDPOINTS.GET_PROFILE, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 'Accept': 'application/json',
             },
-            body: body,
+            body: `profile_id=${encodeURIComponent(profileId)}`,
         });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch profile details');
-        }
-
-        const result = await response.json();
         return result;
     } catch (error) {
         console.error('Get profile error:', error);
+        return { status: false, message: 'Network error or server unavailable' };
+    }
+};
+
+export const getDashboardStats = async (clientId) => {
+    try {
+        const result = await fetchJSON(ENDPOINTS.DASHBOARD_STATS, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Accept': 'application/json',
+            },
+            body: `client_id=${encodeURIComponent(clientId)}`,
+        });
+        return result;
+    } catch (error) {
+        console.error('Get dashboard stats error:', error);
         return { status: false, message: 'Network error or server unavailable' };
     }
 };

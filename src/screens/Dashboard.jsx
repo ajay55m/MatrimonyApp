@@ -8,14 +8,15 @@ import {
     ScrollView,
     Dimensions,
     StatusBar,
+    Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Skeleton from '../components/Skeleton';
 import { scale, moderateScale } from '../utils/responsive';
-import { getProfile } from '../services/profileService';
-
+import { decodeUTF8String, logUTF8String } from '../utils/utf8Helper';
+import { getProfile, getDashboardStats } from '../services/profileService';
 
 const { width } = Dimensions.get('window');
 
@@ -55,40 +56,55 @@ const Dashboard = ({ t }) => {
                 if (data) {
                     const parsedData = JSON.parse(data);
 
-                    // Initial load from storage to show something quickly
+                    // Debug: Check what's coming from storage
+                    console.log("Raw user_name from storage:", parsedData.user_name);
+                    logUTF8String("Storage user_name", parsedData.user_name);
+
                     setUserData(parsedData);
 
-                    // Fetch fresh profile data to ensure latest details (especially Tamil names)
-                    // Try ID variations: profile_id, correct ID from login response
-                    const idToFetch = parsedData.profile_id || parsedData.m_id || parsedData.id || parsedData.user_id;
-                    console.log("Dashboard: Fetching profile for ID:", idToFetch);
+                    // Fetch fresh profile data
+                    const idToFetch = parsedData.m_id;
 
                     if (idToFetch) {
                         try {
                             const profileResult = await getProfile(idToFetch);
-                            console.log("Full Profile Fetch Result:", JSON.stringify(profileResult, null, 2));
+
+                            // Debug: Check what's coming from API
+                            console.log("Profile API Response:", JSON.stringify(profileResult, null, 2));
 
                             if (profileResult && profileResult.status && profileResult.data) {
-                                // Prioritize Tamil Profile or Main Profile
-                                const liveProfile = profileResult.data.tamil_profile || profileResult.data.main_profile;
-                                console.log("Live Profile Data Extracted:", liveProfile);
+                                const liveProfile = profileResult.data.main_profile;
+
+                                // Debug: Check the name specifically
+                                console.log("Live user_name from API:", liveProfile?.user_name);
+                                logUTF8String("API user_name", liveProfile?.user_name);
+
+                                let statsData = {};
+                                try {
+                                    const statsResult = await getDashboardStats(idToFetch);
+                                    if (statsResult && statsResult.status && statsResult.data) {
+                                        statsData = statsResult.data;
+                                    }
+                                } catch (statsErr) {
+                                    console.log("Failed to fetch dashboard stats", statsErr);
+                                }
 
                                 if (liveProfile) {
-                                    // Merge live data on top of stored data
-                                    // Map live 'user_name' to 'username' key used in UI if needed, or update UI to use user_name
                                     const updatedData = {
                                         ...parsedData,
                                         ...liveProfile,
-                                        username: liveProfile.user_name || liveProfile.name || liveProfile.username || liveProfile.profile_name,
-                                        user_photo: liveProfile.user_photo,
-                                        photo_data1: liveProfile.photo_data1,
-                                        client_id: liveProfile.m_id || liveProfile.client_id || liveProfile.profile_id || parsedData.client_id,
+                                        ...statsData,
+                                        user_name: liveProfile.user_name || parsedData.user_name,
                                     };
-                                    console.log("Final Merged User Data:", updatedData);
+
+                                    // Debug final merged data
+                                    console.log("Final user_name:", updatedData.user_name);
+                                    logUTF8String("Final user_name", updatedData.user_name);
+
                                     setUserData(updatedData);
 
-                                    // Optional: Update storage to keep it fresh
-                                    AsyncStorage.setItem('userData', JSON.stringify(updatedData));
+                                    // Store back to AsyncStorage
+                                    await AsyncStorage.setItem('userData', JSON.stringify(updatedData));
                                 }
                             }
                         } catch (fetchErr) {
@@ -106,6 +122,17 @@ const Dashboard = ({ t }) => {
         loadUserData();
     }, []);
 
+    // Function to safely display text with fallback
+    const displayName = () => {
+        const name = userData?.user_name || userData?.name || userData?.username || 'User';
+        // If we see question marks, log the actual value
+        if (name && name.includes('?')) {
+            console.log("Name contains question marks:", name);
+            logUTF8String("Problematic name", name);
+        }
+        return name;
+    };
+
     // Header with Profile Summary (unchanged)
     const renderHeader = () => (
         <LinearGradient
@@ -118,7 +145,9 @@ const Dashboard = ({ t }) => {
                 <View style={styles.headerTop}>
                     <View style={styles.headerText}>
                         <Text style={styles.greeting}>{t('GOOD_MORNING')}</Text>
-                        <Text style={styles.headerName}>{userData?.user_name || userData?.name || userData?.username || 'User'}</Text>
+                        <Text style={styles.headerName}>
+                            {displayName()}
+                        </Text>
                     </View>
                     <TouchableOpacity style={styles.notificationBtn}>
                         <Icon name="bell-outline" size={24} color="#FFF" />
@@ -144,17 +173,17 @@ const Dashboard = ({ t }) => {
 
                     <View style={styles.headerStats}>
                         <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>1/50</Text>
+                            <Text style={styles.statNumber}>{userData?.viewed_profiles || '0'}/{userData?.views_limit || '50'}</Text>
                             <Text style={styles.statLabel}>{t('VIEWS')}</Text>
                         </View>
                         <View style={styles.statDivider} />
                         <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>Free</Text>
+                            <Text style={styles.statNumber}>{userData?.mem_plan === '0' ? 'Free' : (userData?.plan_name || 'Premium')}</Text>
                             <Text style={styles.statLabel}>{t('PLAN')}</Text>
                         </View>
                         <View style={styles.statDivider} />
                         <View style={styles.statItem}>
-                            <Text style={[styles.statNumber, { color: '#FFEB3B' }]}>85%</Text>
+                            <Text style={[styles.statNumber, { color: '#FFEB3B' }]}>{userData?.profile_completeness || '0'}%</Text>
                             <Text style={styles.statLabel}>{t('COMPLETE')}</Text>
                         </View>
                     </View>
@@ -182,7 +211,7 @@ const Dashboard = ({ t }) => {
                     { value: userData?.user_points || '0', label: t('Points'), gradient: ['#FF4081', '#FF80AB'], icon: 'star-circle' },
                     { value: userData?.viewed_profiles || '0', label: t('Profile Views'), gradient: ['#42A5F5', '#64B5F6'], icon: 'eye' },
                     { value: userData?.no_sel_profiles || '0', label: t('Selected Profiles'), gradient: ['#4CAF50', '#66BB6A'], icon: 'heart-multiple' },
-                    { value: '0', label: t('Connect Requests'), gradient: ['#FF4081', '#FF80AB'], icon: 'account-heart' },
+                    { value: userData?.connect_requests || '0', label: t('Connect Requests'), gradient: ['#FF4081', '#FF80AB'], icon: 'account-heart' },
                 ].map((item, index) => (
                     <TouchableOpacity
                         key={index}
@@ -224,7 +253,9 @@ const Dashboard = ({ t }) => {
         <View style={styles.sidebarCard}>
             <View style={styles.welcomeHeader}>
                 <Text style={styles.welcomeLabel}>Welcome,</Text>
-                <Text style={styles.sidebarWelcomeText}>{userData?.user_name || userData?.name || userData?.username || 'User'}</Text>
+                <Text style={styles.sidebarWelcomeText}>
+                    {displayName()}
+                </Text>
                 <Text style={styles.profileId}>{userData?.client_id || '...'}</Text>
             </View>
 
@@ -385,7 +416,7 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontSize: 24,
         fontWeight: 'bold',
-        fontFamily: TAMIL_FONT,
+        fontFamily: 'NotoSansTamil-Bold',
     },
     notificationBtn: {
         width: 44,
@@ -590,7 +621,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: COLORS.textPrimary,
         marginBottom: 2,
-        fontFamily: TAMIL_FONT,
+        fontFamily: 'NotoSansTamil-Bold',
     },
     profileId: {
         fontSize: 13,
