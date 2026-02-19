@@ -12,7 +12,7 @@ export const ENDPOINTS = {
     SEARCH_PROFILES: `${BASE_URL}/search_profiles.php`,
     GET_PROFILE: `${BASE_URL}/profile.php`,
     USER_PROFILES: `${BASE_URL}/userProfile.php`,
-    DASHBOARD_STATS: `${BASE_URL}/dashboard-stats.php`,
+    DASHBOARD: `${BASE_URL}/get-profile.php`,
 };
 
 export default {

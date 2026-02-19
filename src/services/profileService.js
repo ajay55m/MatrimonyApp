@@ -166,13 +166,13 @@ export const getProfile = async (profileId) => {
 
 export const getDashboardStats = async (clientId) => {
     try {
-        const result = await fetchJSON(ENDPOINTS.DASHBOARD_STATS, {
+        const result = await fetchJSON(ENDPOINTS.DASHBOARD, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 'Accept': 'application/json',
             },
-            body: `client_id=${encodeURIComponent(clientId)}`,
+            body: `tamil_client_id=${encodeURIComponent(clientId)}`,
         });
         return result;
     } catch (error) {
@@ -192,25 +192,39 @@ export const getUserProfiles = async (tamilClientId) => {
             body: `tamil_client_id=${encodeURIComponent(tamilClientId)}`,
         });
 
-        if (result && Array.isArray(result.data)) {
-            result.data = result.data.map(profile => ({
-                ...profile,
-                id: profile.tamil_profile_id || profile.id || profile.profile_id,
-                profile_id: profile.profile_id || profile.id,
-                name: profile.name || profile.user_name || profile.profile_name,
-                // API response doesn't provide image path, rely on default if missing
-                profile_image: profile.user_photo
-                    ? `https://nadarmahamai.com/uploads/${profile.user_photo}`
-                    : (profile.photo_data1 ? `https://nadarmahamai.com/uploads/${profile.photo_data1}` : null),
-                age: profile.age,
-                height: profile.height || (profile.height_feet ? `${profile.height_feet}ft ${profile.height_inches}in` : ''),
-                education: (Array.isArray(profile.education) ? profile.education[0] : profile.education) || profile.padippu || '',
-                occupation: profile.occupation || profile.profession || 'Not Specified',
-                location: profile.location || profile.gplace || profile.city || profile.district || 'Unknown',
-                religion: profile.religion,
-                caste: profile.caste,
-                verified: profile.ver_flag === 1 || profile.profile_status === '1' || profile.viewed === true,
-            }));
+        if (result && result.status) {
+            let profileData = null;
+
+            // Handle single profile response object (e.g. from get-profile.php)
+            if (result.data && (result.data.tamil_profile || result.data.main_profile)) {
+                const rawProfile = result.data.tamil_profile || result.data.main_profile;
+                profileData = [rawProfile]; // Wrap in array
+            }
+            // Handle array response
+            else if (Array.isArray(result.data)) {
+                profileData = result.data;
+            }
+
+            if (profileData) {
+                result.data = profileData.map(profile => ({
+                    ...profile,
+                    id: profile.tamil_profile_id || profile.id || profile.profile_id,
+                    profile_id: profile.profile_id || profile.id,
+                    name: profile.name || profile.user_name || profile.profile_name,
+                    // API response doesn't provide image path, rely on default if missing
+                    profile_image: profile.user_photo
+                        ? `https://nadarmahamai.com/uploads/${profile.user_photo}`
+                        : (profile.photo_data1 ? `https://nadarmahamai.com/uploads/${profile.photo_data1}` : null),
+                    age: profile.age,
+                    height: profile.height || (profile.height_feet ? `${profile.height_feet}ft ${profile.height_inches}in` : ''),
+                    education: (Array.isArray(profile.education) ? profile.education[0] : profile.education) || profile.padippu || '',
+                    occupation: profile.occupation || profile.profession || 'Not Specified',
+                    location: profile.location || profile.gplace || profile.city || profile.district || 'Unknown',
+                    religion: profile.religion,
+                    caste: profile.caste,
+                    verified: profile.ver_flag === 1 || profile.profile_status === '1' || profile.viewed === true,
+                }));
+            }
         }
         return result;
     } catch (error) {

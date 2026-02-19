@@ -18,7 +18,6 @@ import Skeleton from '../components/Skeleton';
 import { scale, moderateScale } from '../utils/responsive';
 import { decodeUTF8String, logUTF8String } from '../utils/utf8Helper';
 import { getProfile, getDashboardStats } from '../services/profileService';
-import { getSession } from '../utils/session';
 
 const { width } = Dimensions.get('window');
 
@@ -56,12 +55,12 @@ const Dashboard = ({ t }) => {
         useCallback(() => {
             const loadUserData = async () => {
                 try {
-                    const data = await getSession('userData');
+                    const data = await AsyncStorage.getItem('userData');
                     if (data) {
-                        const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+                        const parsedData = JSON.parse(data);
 
                         // Debug: Check what's coming from storage
-                        const storedUsername = await getSession('username');
+                        const storedUsername = await AsyncStorage.getItem('username');
                         if (storedUsername) {
                             parsedData.username = storedUsername;
                             // Ensure user_name is also updated if missing or just to be safe for display logic
@@ -75,7 +74,7 @@ const Dashboard = ({ t }) => {
                         setUserData(parsedData);
 
                         // Fetch fresh profile data
-                        const idToFetch = parsedData.m_id;
+                        const idToFetch = parsedData.tamil_client_id || parsedData.id || parsedData.m_id;
 
                         if (idToFetch) {
                             try {
@@ -85,7 +84,7 @@ const Dashboard = ({ t }) => {
                                 console.log("Profile API Response:", JSON.stringify(profileResult, null, 2));
 
                                 if (profileResult && profileResult.status && profileResult.data) {
-                                    const liveProfile = profileResult.data.main_profile;
+                                    const liveProfile = profileResult.data.tamil_profile || profileResult.data.main_profile || profileResult.data;
 
                                     // Debug: Check the name specifically
                                     console.log("Live user_name from API:", liveProfile?.user_name);
@@ -107,6 +106,8 @@ const Dashboard = ({ t }) => {
                                             ...liveProfile,
                                             ...statsData,
                                             user_name: liveProfile.user_name || parsedData.user_name,
+                                            username: liveProfile.user_name || parsedData.username, // Override bad username
+                                            name: liveProfile.user_name || parsedData.name, // Override name
                                         };
 
                                         // Debug final merged data
@@ -137,8 +138,8 @@ const Dashboard = ({ t }) => {
 
     // Function to safely display text with fallback
     const displayName = () => {
-        // Priority: username (from login/storage) -> user_name (from profile API) -> name -> 'User'
-        const name = userData?.username || userData?.user_name || userData?.name || 'User';
+        // Priority: user_name (from profile API) -> name -> username (from login) -> 'User'
+        const name = userData?.user_name || userData?.name || userData?.username || 'User';
         // If we see question marks, log the actual value
         if (name && name.includes('?')) {
             console.log("Name contains question marks:", name);
