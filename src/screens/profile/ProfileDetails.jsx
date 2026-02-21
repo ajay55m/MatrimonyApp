@@ -384,10 +384,7 @@ const ProfileDetails = () => {
             {/* Bottom Action Bar */}
             <View style={styles.bottomBarWrapper}>
                 <View style={styles.bottomBar}>
-                    <TouchableOpacity style={styles.actionBtnSecondary}>
-                        <Icon name="star-outline" size={19} color="#ef0d8d" />
-                        <Text style={styles.actionTextSecondary}>Shortlist</Text>
-                    </TouchableOpacity>
+
 
                     <LinearGradient
                         colors={['#ef0d8d', '#ad0761']}
@@ -395,10 +392,7 @@ const ProfileDetails = () => {
                         end={{ x: 1, y: 0 }}
                         style={styles.actionBtnPrimary}
                     >
-                        <TouchableOpacity style={styles.actionBtnPrimaryInner}>
-                            <Icon name="phone" size={19} color="#FFF" />
-                            <Text style={styles.actionTextPrimary}>Contact Now</Text>
-                        </TouchableOpacity>
+
                     </LinearGradient>
                 </View>
             </View>
