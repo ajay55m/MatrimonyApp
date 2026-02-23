@@ -12,7 +12,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const { height } = Dimensions.get('window');
 
-const ModalSelector = ({ visible, options, selectedValue, onSelect, onClose, title }) => {
+const ModalSelector = ({ visible, options, selectedValue, onSelect, onClose, title, labels = {} }) => {
     if (!visible) return null;
 
     const renderItem = ({ item }) => (
@@ -30,7 +30,7 @@ const ModalSelector = ({ visible, options, selectedValue, onSelect, onClose, tit
                 styles.optionText,
                 item === selectedValue && styles.selectedOptionText
             ]}>
-                {item}
+                {labels[item] || item}
             </Text>
             {item === selectedValue && (
                 <Icon name="check" size={20} color="#ef0d8d" />

@@ -13,6 +13,13 @@ import { scale, moderateScale, width } from '../utils/responsive';
 import { searchProfiles } from '../services/profileService';
 import { ActivityIndicator } from 'react-native';
 import ModalSelector from './ModalSelector';
+import { STARS } from '../constants/stars';
+import { RASIS } from '../constants/rasis';
+import { QUALIFICATIONS } from '../constants/qualifications';
+import { OCCUPATIONS } from '../constants/occupations';
+import { COMPLEXIONS } from '../constants/complexions';
+import { MARITAL_STATUSES } from '../constants/maritalStatuses';
+import { DISTRICTS } from '../constants/districts';
 
 const COLORS = {
     primary: '#ef5c0dff',
@@ -57,6 +64,9 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
     const [ageToModalVisible, setAgeToModalVisible] = useState(false);
     const [qualificationModalVisible, setQualificationModalVisible] = useState(false);
     const [workModalVisible, setWorkModalVisible] = useState(false);
+    const [starModalVisible, setStarModalVisible] = useState(false);
+    const [rasiModalVisible, setRasiModalVisible] = useState(false);
+    const [districtModalVisible, setDistrictModalVisible] = useState(false);
 
     // ── Normal Filters (Quick Search) ──────────────────────────
     const [filters, setFilters] = useState({
@@ -83,6 +93,7 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
         star: 'SELECT_STAR',            // ← now properly wired
         color: 'SELECT_COLOR',
         jewel: 'SELECT_JEWEL',          // ← maps to jewel column
+        maritalStatus: 'SELECT_MARITAL_STATUS',
     });
 
     const cycleNormalFilter = (key, options) => {
@@ -268,49 +279,17 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
 
     const qualificationOptions = [
         'SELECT_QUALIFICATION',
-        'Engineer',
-        'Doctor',
-        'Lawyer',
-        'Master Degree',
-        'Master Degree With B.Ed',
-        'Degree With B.Ed',
-        'Degree',
-        'Diplamo',
-        'ITI',
-        'HSC',
-        'SSLC',
-        'School',
-        'Auditor',
-        '8th'
+        ...QUALIFICATIONS.map(q => q.value)
     ];
 
     const workOptions = [
         'SELECT_WORK',
-        'Programmer',
-        'Bank',
-        'Private',
-        'Project Manager',
-        'Lecturer',
-        'Asst Professor',
-        'Mechanical Engineer',
-        'Engineer Marketing',
-        'Technical Officer',
-        'Legal Services',
-        'Manufacturing / Distributions',
-        'Medical / Health Services',
-        'Politics / Government / Military',
-        'Real Estate',
-        'Sales / Marketing',
-        'Science',
-        'Technical / Engineering',
-        'Transportation',
-        'Food Service',
-        'Other',
-        'Software Engineer',
-        'NoJob',
-        'Railway Department',
-        'Business',
-        'Civil Engineer'
+        ...OCCUPATIONS.map(o => o.value)
+    ];
+
+    const districtOptions = [
+        'SELECT_DISTRICT',
+        ...DISTRICTS.map(d => d.value)
     ];
 
     return (
@@ -380,7 +359,7 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
 
                         <TouchableOpacity
                             style={styles.inputGroup}
-                            onPress={() => cycleNormalFilter('religion', ['SELECT_RELIGION', 'HINDU', 'CHRISTIAN'])}
+                            onPress={() => cycleNormalFilter('religion', ['SELECT_RELIGION', 'HINDU', 'CHRISTIAN', 'OTHER_RELIGION'])}
                         >
                             <Text style={styles.label}>{t('RELIGION')}</Text>
                             <View style={styles.pickerBox}>
@@ -456,8 +435,11 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                         <View style={styles.formGrid}>
                             {[
                                 {
+                                    label: t('MARITAL_STATUS'), key: 'maritalStatus',
+                                    opts: ['SELECT_MARITAL_STATUS', ...MARITAL_STATUSES.map(m => m.value)],
+                                },
+                                {
                                     label: t('DISTRICT'), key: 'district',
-                                    opts: ['SELECT_DISTRICT', 'CHENNAI', 'MADURAI', 'TIRUNELVELI'],
                                 },
                                 {
                                     label: t('CITY'), key: 'city',
@@ -465,7 +447,7 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                                 },
                                 {
                                     label: t('RELIGION'), key: 'religion',
-                                    opts: ['SELECT_RELIGION', 'HINDU', 'CHRISTIAN'],
+                                    opts: ['SELECT_RELIGION', 'HINDU', 'CHRISTIAN', 'OTHER_RELIGION'],
                                 },
                                 {
                                     label: t('CASTE'), key: 'caste',           // ← added
@@ -485,15 +467,13 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                                 },
                                 {
                                     label: t('RAASI'), key: 'raasi',
-                                    opts: ['SELECT_RAASI', 'MESHAM', 'RISHABAM', 'MITHUNAM'],
                                 },
                                 {
-                                    label: t('STAR'), key: 'star',            // ← now wired
-                                    opts: ['SELECT_STAR', 'ASHWINI', 'BHARANI'],
+                                    label: t('STAR'), key: 'star',
                                 },
                                 {
                                     label: t('COLOR'), key: 'color',
-                                    opts: ['SELECT_COLOR', 'FAIR', 'WHEATISH', 'DARK'],
+                                    opts: ['SELECT_COLOR', ...COMPLEXIONS.map(c => c.value)],
                                 },
                                 {
                                     label: t('JEWEL'), key: 'jewel',          // ← jewel column
@@ -521,12 +501,29 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
                                     onPress={() => {
                                         if (field.key === 'qualification') setQualificationModalVisible(true);
                                         else if (field.key === 'work') setWorkModalVisible(true);
+                                        else if (field.key === 'star') setStarModalVisible(true);
+                                        else if (field.key === 'raasi') setRasiModalVisible(true);
+                                        else if (field.key === 'district') setDistrictModalVisible(true);
                                         else cycleAdvFilter(field.key, field.opts);
                                     }}
                                 >
                                     <Text style={styles.label}>{field.label}</Text>
                                     <View style={styles.pickerBox}>
-                                        <Text style={styles.pickerText}>{t(advFilters[field.key])}</Text>
+                                        <Text style={styles.pickerText}>
+                                            {field.key === 'star'
+                                                ? (STARS.find(s => s.value === advFilters.star)?.label || t(advFilters.star))
+                                                : field.key === 'raasi'
+                                                    ? (RASIS.find(r => r.value === advFilters.raasi)?.label || t(advFilters.raasi))
+                                                    : field.key === 'qualification'
+                                                        ? (QUALIFICATIONS.find(q => q.value === advFilters.qualification)?.label || t(advFilters.qualification))
+                                                        : field.key === 'work'
+                                                            ? (OCCUPATIONS.find(o => o.value === advFilters.work)?.label || t(advFilters.work))
+                                                            : field.key === 'color'
+                                                                ? (COMPLEXIONS.find(c => c.value === advFilters.color)?.label || t(advFilters.color))
+                                                                : field.key === 'district'
+                                                                    ? (DISTRICTS.find(d => d.value === advFilters.district)?.label || t(advFilters.district))
+                                                                    : t(advFilters[field.key])}
+                                        </Text>
                                         <Icon name="chevron-down" size={16} color={COLORS.textSub} />
                                     </View>
                                 </TouchableOpacity>
@@ -579,6 +576,7 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
             <ModalSelector
                 visible={qualificationModalVisible}
                 options={qualificationOptions}
+                labels={QUALIFICATIONS.reduce((acc, q) => ({ ...acc, [q.value]: q.label }), {})}
                 selectedValue={advFilters.qualification}
                 onSelect={(val) => setAdvFilters(prev => ({ ...prev, qualification: val }))}
                 onClose={() => setQualificationModalVisible(false)}
@@ -587,10 +585,38 @@ const SearchFilter = ({ onSearch, t, isLoggedIn = false }) => {
             <ModalSelector
                 visible={workModalVisible}
                 options={workOptions}
+                labels={OCCUPATIONS.reduce((acc, o) => ({ ...acc, [o.value]: o.label }), {})}
                 selectedValue={advFilters.work}
                 onSelect={(val) => setAdvFilters(prev => ({ ...prev, work: val }))}
                 onClose={() => setWorkModalVisible(false)}
                 title={t('WORK')}
+            />
+            <ModalSelector
+                visible={starModalVisible}
+                options={STARS.map(s => s.value)}
+                labels={STARS.reduce((acc, s) => ({ ...acc, [s.value]: s.label }), {})}
+                selectedValue={advFilters.star}
+                onSelect={(val) => setAdvFilters(prev => ({ ...prev, star: val }))}
+                onClose={() => setStarModalVisible(false)}
+                title={t('STAR')}
+            />
+            <ModalSelector
+                visible={rasiModalVisible}
+                options={RASIS.map(r => r.value)}
+                labels={RASIS.reduce((acc, r) => ({ ...acc, [r.value]: r.label }), {})}
+                selectedValue={advFilters.raasi}
+                onSelect={(val) => setAdvFilters(prev => ({ ...prev, raasi: val }))}
+                onClose={() => setRasiModalVisible(false)}
+                title={t('RAASI')}
+            />
+            <ModalSelector
+                visible={districtModalVisible}
+                options={districtOptions}
+                labels={DISTRICTS.reduce((acc, d) => ({ ...acc, [d.value]: d.label }), {})}
+                selectedValue={advFilters.district}
+                onSelect={(val) => setAdvFilters(prev => ({ ...prev, district: val }))}
+                onClose={() => setDistrictModalVisible(false)}
+                title={t('DISTRICT')}
             />
         </View>
     );

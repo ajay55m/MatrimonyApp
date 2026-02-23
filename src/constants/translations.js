@@ -67,6 +67,7 @@ export const TRANSLATIONS = {
         STAR: 'Star',
         COLOR: 'Complexion',
         JEWEL: 'Jewel',
+        MARITAL_STATUS: 'Marital Status',
 
         // Dropdown Prompts
         SELECT_DISTRICT: 'Select District',
@@ -80,6 +81,7 @@ export const TRANSLATIONS = {
         SELECT_STAR: 'Select Star',
         SELECT_COLOR: 'Select Color',
         SELECT_JEWEL: 'Select Jewel',
+        SELECT_MARITAL_STATUS: 'Select Status',
 
         // Data Values
         CHENNAI: 'Chennai',
@@ -105,13 +107,22 @@ export const TRANSLATIONS = {
         ARCHITECT: 'Architect',
         NO_JOB: 'Unemployed',
         MESHAM: 'Mesham',
-        RISHABAM: 'Rishabam',
+        RISHABAM: 'Reshabam',
         MITHUNAM: 'Mithunam',
+        KADAKAM: 'Kadakam',
+        SIMMAM: 'Simmam',
+        KANNI: 'Kanni',
+        TULAM: 'Tulam',
+        VIRISCHIKAM: 'Virischikam',
+        DHANUSU: 'Dhanusu',
+        MAKARAM: 'Makaram',
+        KUMBHAM: 'Kumbham',
+        MEENAM: 'Meenam',
         ASHWINI: 'Ashwini',
         BHARANI: 'Bharani',
         FAIR: 'Fair',
+        VERY_FAIR: 'Very Fair',
         WHEATISH: 'Wheatish',
-        DARK: 'Dark',
 
         // Dashboard
         INCOMPLETE_PROFILE: 'Your profile is incomplete. Complete it 100% for better reach.',
@@ -168,6 +179,7 @@ export const TRANSLATIONS = {
         GROOM: 'Groom',
         HINDU: 'Hindu',
         CHRISTIAN: 'Christian',
+        OTHER_RELIGION: 'Other Religion',
         NADAR: 'Nadar',
         MAN: 'Man',
         WOMAN: 'Woman',
@@ -240,6 +252,7 @@ export const TRANSLATIONS = {
         STAR: 'நட்சத்திரம்',
         COLOR: 'நிறம்',
         JEWEL: 'நகை',
+        MARITAL_STATUS: 'திருமண நிலை',
 
         // Dropdown Prompts
         SELECT_DISTRICT: 'மாவட்டம் தேர்வு',
@@ -253,6 +266,7 @@ export const TRANSLATIONS = {
         SELECT_STAR: 'நட்சத்திரம் தேர்வு',
         SELECT_COLOR: 'நிறம் தேர்வு',
         SELECT_JEWEL: 'நகை தேர்வு',
+        SELECT_MARITAL_STATUS: 'திருமண நிலை தேர்வு',
 
         // Data Values
         CHENNAI: 'சென்னை',
@@ -280,11 +294,20 @@ export const TRANSLATIONS = {
         MESHAM: 'மேஷம்',
         RISHABAM: 'ரிஷபம்',
         MITHUNAM: 'மிதுனம்',
+        KADAKAM: 'கடகம்',
+        SIMMAM: 'சிம்மம்',
+        KANNI: 'கன்னி',
+        TULAM: 'துலாம்',
+        VIRISCHIKAM: 'விருச்சிகம்',
+        DHANUSU: 'தனுசு',
+        MAKARAM: 'மகரம்',
+        KUMBHAM: 'கும்பம்',
+        MEENAM: 'மீனம்',
         ASHWINI: 'அஸ்வினி',
         BHARANI: 'பரணி',
-        FAIR: 'சிகப்பு',
+        FAIR: 'சிவப்பு',
+        VERY_FAIR: 'நல்ல சிவப்பு',
         WHEATISH: 'மாநிறம்',
-        DARK: 'கருப்பு',
 
 
         // Dashboard
@@ -341,7 +364,8 @@ export const TRANSLATIONS = {
         BRIDE: 'மணமகள்',
         GROOM: 'மணமகன்',
         HINDU: 'இந்து',
-        CHRISTIAN: 'கிறிஸ்தவம்',
+        CHRISTIAN: 'கிறிஸ்தவர்',
+        OTHER_RELIGION: 'மற்ற மதம்',
         NADAR: 'நாடார்',
         MAN: 'ஆண்',
         WOMAN: 'பெண்',

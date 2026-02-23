@@ -16,6 +16,17 @@ import { Picker } from '@react-native-picker/picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import { registerUser } from '../../services/authService';
+import { ActivityIndicator } from 'react-native';
+import { STARS } from '../../constants/stars';
+import { RELIGIONS } from '../../constants/religions';
+import { RASIS } from '../../constants/rasis';
+import { QUALIFICATIONS } from '../../constants/qualifications';
+import { OCCUPATIONS } from '../../constants/occupations';
+import { COMPLEXIONS } from '../../constants/complexions';
+import { MARITAL_STATUSES } from '../../constants/maritalStatuses';
+import { DIRECTIONS } from '../../constants/directions';
+import { DISTRICTS } from '../../constants/districts';
 
 const { width, height } = Dimensions.get('window');
 
@@ -87,13 +98,22 @@ const RegistrationScreen = ({ navigation }) => {
     const otpInputs = useRef([]);
     const slideAnim = useRef(new Animated.Value(height)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const [loading, setLoading] = useState(false);
+    const [generatedOtp, setGeneratedOtp] = useState('');
+
+    const generateLocalOtp = () => {
+        const newOtp = Math.floor(1000 + Math.random() * 9000).toString();
+        setGeneratedOtp(newOtp);
+        // In a real app, this would be sent via SMS/Email
+        // For local verification, we show it in an Alert
+        Alert.alert('Verification Code', `Your OTP is: ${newOtp}\n(This is for local testing)`);
+        return newOtp;
+    };
 
     const [formData, setFormData] = useState({
-        maritalStatus: "",
-        marriageType: '',       // Widow | Divorce
+        maritalStatus: 0,       // 0: Unmarried, 1: Widower, 2: Divorce, 3: Other
         marriageReason: '',
-        hasChildren: '',        // Yes | No
-        noOfChildren: '',
+        hasChildren: 0,         // 0: No, 1: 1 child, 2: 2 children...
         childrenDetails: '',
         name: '',
         gender: 'Male',
@@ -107,6 +127,7 @@ const RegistrationScreen = ({ navigation }) => {
         birthPlace: '',
         nativePlace: '',
         district: '',
+        state: '',
         city: '',
         religion: '',
         rasi: '',
@@ -159,20 +180,87 @@ const RegistrationScreen = ({ navigation }) => {
         navigation.goBack();
     };
 
-    const handleNext = () => {
+    const validateStep1 = () => {
+        const required = ['name', 'phone1', 'dob', 'fatherName', 'motherName', 'birthPlace', 'nativePlace', 'state', 'district', 'religion', 'rasi', 'star'];
+        for (const field of required) {
+            if (!formData[field]) {
+                Alert.alert('பிழை', 'அனைத்து கட்டாய புலங்களையும் நிரப்பவும்');
+                return false;
+            }
+        }
+        if (formData.phone1.length < 10) {
+            Alert.alert('பிழை', 'சரியான கைபேசி எண்ணை உள்ளிடவும்');
+            return false;
+        }
+        return true;
+    };
+
+    const validateStep2 = () => {
+        const required = ['complexion', 'heightFt', 'education', 'job', 'income', 'maritalStatus', 'email'];
+        for (const field of required) {
+            if (formData[field] === '' || formData[field] === undefined || formData[field] === null) {
+                Alert.alert('பிழை', 'அனைத்து கட்டாய புலங்களையும் நிரப்பவும்');
+                return false;
+            }
+        }
+        if (formData.maritalStatus > 0 && formData.maritalStatus === 3 && !formData.marriageReason) {
+            Alert.alert('பிழை', 'காரணம் குறிப்பிடவும்');
+            return false;
+        }
+        if (!formData.email.includes('@')) {
+            Alert.alert('பிழை', 'சரியான மின்னஞ்சல் முகவரியை உள்ளிடவும்');
+            return false;
+        }
+        return true;
+    };
+
+    const handleNext = async () => {
         if (currentStep === 1) {
-            setCurrentStep(2);
+            if (validateStep1()) setCurrentStep(2);
         } else if (currentStep === 2) {
             if (!showOtpInput) {
-                setShowOtpInput(true);
-                setTimeout(() => otpInputs.current[0]?.focus(), 400);
+                if (validateStep2()) {
+                    generateLocalOtp();
+                    setShowOtpInput(true);
+                    setTimeout(() => otpInputs.current[0]?.focus(), 400);
+                }
             } else {
-                setCurrentStep(3); // Move to password setup
-                setShowOtpInput(false);
+                const enteredOtp = otp.join('');
+                if (enteredOtp === generatedOtp) {
+                    setCurrentStep(3);
+                    setShowOtpInput(false);
+                } else {
+                    Alert.alert('பிழை', 'தவறான குறியீடு. மீண்டும் முயற்சிக்கவும்.');
+                }
             }
         } else if (currentStep === 3) {
-            // Password setup complete, move to success
-            setCurrentStep(4);
+            if (!password || password.length < 6) {
+                Alert.alert('பிழை', 'கடவுச்சொல் குறைந்தது 6 எழுத்துக்கள் இருக்க வேண்டும்');
+                return;
+            }
+            if (password !== confirmPassword) {
+                Alert.alert('பிழை', 'கடவுச்சொற்கள் பொருந்தவில்லை');
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const registrationData = {
+                    ...formData,
+                    password: password
+                };
+                const result = await registerUser(registrationData);
+                if (result.status) {
+                    setCurrentStep(4);
+                } else {
+                    Alert.alert('பதிவு தோல்வி', result.message || 'மீண்டும் முயற்சிக்கவும்');
+                }
+            } catch (error) {
+                console.error('Registration Error:', error);
+                Alert.alert('பிழை', 'சர்வர் தொடர்பு கொள்ள முடியவில்லை. மீண்டும் முயற்சிக்கவும்.');
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -368,25 +456,64 @@ const RegistrationScreen = ({ navigation }) => {
                             </View>
                         </View>
 
+                        <ModernInput
+                            label="மாநிலம்"
+                            value={formData.state}
+                            onChangeText={(t) => updateField('state', t)}
+                            placeholder="மாநிலம்"
+                            icon="map"
+                        />
+
                         <View style={styles.formRow}>
                             <View style={styles.formCol}>
-                                <ModernSelect label="மாவட்டம்" value={formData.district} icon="map-marker" />
+                                <ModernSelect
+                                    label="மாவட்டம்"
+                                    value={formData.district}
+                                    icon="map-marker"
+                                    items={DISTRICTS}
+                                    onChange={(val) => updateField('district', val)}
+                                />
                             </View>
                             <View style={styles.formCol}>
                                 <ModernInput label="நகரம்" value={formData.city} icon="map-marker" onChangeText={(t) => updateField('city', t)} />
                             </View>
                         </View>
+                        <ModernSelect
+                            label="மதம்"
+                            value={formData.religion}
+                            icon="church"
+                            items={RELIGIONS}
+                            onChange={(val) => updateField('religion', val)}
+                        />
 
                         <View style={styles.formRow}>
                             <View style={styles.formCol}>
-                                <ModernSelect label="ராசி" value={formData.rasi} icon="moon-full" />
+                                <ModernSelect
+                                    label="ராசி"
+                                    value={formData.rasi}
+                                    icon="moon-full"
+                                    items={RASIS}
+                                    onChange={(val) => updateField('rasi', val)}
+                                />
                             </View>
                             <View style={styles.formCol}>
-                                <ModernSelect label="நட்சத்திரம்" value={formData.star} icon="star" />
+                                <ModernSelect
+                                    label="நட்சத்திரம்"
+                                    value={formData.star}
+                                    icon="star"
+                                    items={STARS}
+                                    onChange={(val) => updateField('star', val)}
+                                />
                             </View>
                         </View>
 
-                        <ModernSelect label="பூர்வீக திசை" value={formData.direction} icon="compass" />
+                        <ModernSelect
+                            label="பூர்வீக திசை"
+                            value={formData.direction}
+                            icon="compass"
+                            items={DIRECTIONS}
+                            onChange={(val) => updateField('direction', val)}
+                        />
                         <ModernInput label="குலதெய்வம்" value={formData.familyDeity} onChangeText={(t) => updateField('familyDeity', t)} icon="temple-hindu" />
                     </View>
                 )}
@@ -400,7 +527,13 @@ const RegistrationScreen = ({ navigation }) => {
 
                                 <View style={styles.formRow}>
                                     <View style={styles.formCol}>
-                                        <ModernSelect label="நிறம்" value={formData.complexion} icon="palette" />
+                                        <ModernSelect
+                                            label="நிறம்"
+                                            value={formData.complexion}
+                                            icon="palette"
+                                            items={COMPLEXIONS}
+                                            onChange={(val) => updateField('complexion', val)}
+                                        />
                                     </View>
                                     <View style={styles.formCol}>
                                         <View style={styles.inputContainerModern}>
@@ -428,10 +561,22 @@ const RegistrationScreen = ({ navigation }) => {
 
                                 <View style={styles.formRow}>
                                     <View style={styles.formCol}>
-                                        <ModernInput label="கல்வி" value={formData.education} onChangeText={(t) => updateField('education', t)} placeholder="B.Sc, M.Com" icon="school" />
+                                        <ModernSelect
+                                            label="கல்வி"
+                                            value={formData.education}
+                                            icon="school"
+                                            items={QUALIFICATIONS}
+                                            onChange={(val) => updateField('education', val)}
+                                        />
                                     </View>
                                     <View style={styles.formCol}>
-                                        <ModernSelect label="பணி" value={formData.job} icon="briefcase" />
+                                        <ModernSelect
+                                            label="பணி"
+                                            value={formData.job}
+                                            icon="briefcase"
+                                            items={OCCUPATIONS}
+                                            onChange={(val) => updateField('job', val)}
+                                        />
                                     </View>
                                 </View>
 
@@ -440,48 +585,25 @@ const RegistrationScreen = ({ navigation }) => {
                                     label="திருமண நிலை"
                                     value={formData.maritalStatus}
                                     icon="ring"
-                                    items={[
-                                        { label: 'திருமணமாகாதவர்', value: 'Unmarried' },
-                                        { label: 'திருமணமானவர்', value: 'Married' },
-                                    ]}
+                                    items={MARITAL_STATUSES}
                                     onChange={(val) => {
                                         updateField('maritalStatus', val);
 
-                                        // reset married fields if unmarried
-                                        if (val !== 'Married') {
-                                            updateField('marriageType', '');
+                                        // reset extra fields if Unmarried
+                                        if (val === 0) {
                                             updateField('marriageReason', '');
-                                            updateField('hasChildren', '');
-                                            updateField('noOfChildren', '');
+                                            updateField('hasChildren', 0);
                                             updateField('childrenDetails', '');
                                         }
                                     }}
                                 />
-                                {formData.maritalStatus === 'Married' && (
+                                {formData.maritalStatus > 0 && (
                                     <View style={styles.marriedCard}>
                                         <Text style={styles.marriedTitle}>முந்தைய திருமண விவரங்கள்</Text>
 
-                                        <ModernSelect
-                                            label="Previous Marriage Status"
-                                            value={formData.marriageType}
-                                            icon="account-question"
-                                            items={[
-                                                { label: widowLabel, value: widowLabel },
-                                                { label: 'Divorce', value: 'Divorce' },
-                                                { label: 'Other', value: 'Other' },
-                                            ]}
-                                            onChange={(val) => {
-                                                updateField('marriageType', val);
-
-                                                // reset reason if not Other
-                                                if (val !== 'Other') {
-                                                    updateField('marriageReason', '');
-                                                }
-                                            }}
-                                        />
-                                        {formData.marriageType === 'Other' && (
+                                        {formData.maritalStatus === 3 && (
                                             <ModernInput
-                                                label="காரணம்"
+                                                label="காரணம் (Other Reason)"
                                                 value={formData.marriageReason}
                                                 onChangeText={(t) => updateField('marriageReason', t)}
                                                 placeholder="காரணம் குறிப்பிடவும்"
@@ -491,44 +613,37 @@ const RegistrationScreen = ({ navigation }) => {
                                         )}
 
 
-                                        {/* Has children */}
+                                        {/* Has children - numeric values */}
                                         <ModernSelect
-                                            label="குழந்தைகள் உள்ளதா?"
+                                            label="குழந்தைகள் எண்ணிக்கை"
                                             value={formData.hasChildren}
                                             icon="baby-face-outline"
                                             items={[
-                                                { label: 'ஆம்', value: 'Yes' },
-                                                { label: 'இல்லை', value: 'No' },
+                                                { label: 'இல்லை (None)', value: 0 },
+                                                { label: '1 குழந்தை (1 Child)', value: 1 },
+                                                { label: '2 குழந்தைகள் (2 Children)', value: 2 },
+                                                { label: '3 குழந்தைகள் (3 Children)', value: 3 },
+                                                { label: '4 குழந்தைகள் (4 Children)', value: 4 },
+                                                { label: '5+ குழந்தைகள் (5+ Children)', value: 5 },
                                             ]}
                                             onChange={(val) => {
                                                 updateField('hasChildren', val);
-                                                if (val === 'No') {
-                                                    updateField('noOfChildren', '');
+                                                if (val === 0) {
                                                     updateField('childrenDetails', '');
                                                 }
                                             }}
                                         />
 
                                         {/* Children details */}
-                                        {formData.hasChildren === 'Yes' && (
-                                            <>
-                                                <ModernInput
-                                                    label="குழந்தைகள் எண்ணிக்கை"
-                                                    value={formData.noOfChildren}
-                                                    onChangeText={(t) => updateField('noOfChildren', t)}
-                                                    placeholder="எ.கா: 2"
-                                                    keyboardType="numeric"
-                                                    icon="counter"
-                                                />
-                                                <ModernInput
-                                                    label="குழந்தைகள் விவரம்"
-                                                    value={formData.childrenDetails}
-                                                    onChangeText={(t) => updateField('childrenDetails', t)}
-                                                    placeholder="எ.கா: 1 ஆண் – 5 வயது, 1 பெண் – 3 வயது"
-                                                    multiline
-                                                    icon="note-text"
-                                                />
-                                            </>
+                                        {formData.hasChildren > 0 && (
+                                            <ModernInput
+                                                label="குழந்தைகள் விவரம்"
+                                                value={formData.childrenDetails}
+                                                onChangeText={(t) => updateField('childrenDetails', t)}
+                                                placeholder="எ.கா: 1 ஆண் – 5 வயது, 1 பெண் – 3 வயது"
+                                                multiline
+                                                icon="note-text"
+                                            />
                                         )}
                                     </View>
                                 )}
@@ -586,7 +701,7 @@ const RegistrationScreen = ({ navigation }) => {
                                         />
                                     ))}
                                 </View>
-                                <TouchableOpacity style={styles.resendButton}>
+                                <TouchableOpacity style={styles.resendButton} onPress={generateLocalOtp}>
                                     <Text style={styles.resendText}>குறியீட்டை மீண்டும் அனுப்பு</Text>
                                 </TouchableOpacity>
                             </View>
@@ -655,12 +770,22 @@ const RegistrationScreen = ({ navigation }) => {
                         <Icon name="arrow-left" size={20} color="#6B7280" />
                     </TouchableOpacity>
                 )}
-                <TouchableOpacity style={styles.nextBtnSheet} onPress={handleNext}>
+                <TouchableOpacity
+                    style={[styles.nextBtnSheet, loading && { opacity: 0.7 }]}
+                    onPress={handleNext}
+                    disabled={loading}
+                >
                     <LinearGradient colors={['#EC4899', '#BE185D']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.nextGradientSheet}>
-                        <Text style={styles.nextTextSheet}>
-                            {currentStep === 3 ? 'பதிவு செய்' : currentStep === 2 && showOtpInput ? 'சரிபார்' : 'தொடர்ந்து செல்'}
-                        </Text>
-                        <Icon name={currentStep === 3 ? "check-circle" : showOtpInput ? "shield-check" : "arrow-right"} size={20} color="#FFF" />
+                        {loading ? (
+                            <ActivityIndicator color="#FFF" />
+                        ) : (
+                            <>
+                                <Text style={styles.nextTextSheet}>
+                                    {currentStep === 3 ? 'பதிவு செய்' : currentStep === 2 && showOtpInput ? 'சரிபார்' : 'தொடர்ந்து செல்'}
+                                </Text>
+                                <Icon name={currentStep === 3 ? "check-circle" : showOtpInput ? "shield-check" : "arrow-right"} size={20} color="#FFF" />
+                            </>
+                        )}
                     </LinearGradient>
                 </TouchableOpacity>
             </View>

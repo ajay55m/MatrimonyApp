@@ -1,0 +1,16 @@
+export const QUALIFICATIONS = [
+    { label: 'Engineer', value: 'Engineer' },
+    { label: 'Doctor', value: 'Doctor' },
+    { label: 'Lawyer', value: 'Lawyer' },
+    { label: 'Master Degree', value: 'Master Degree' },
+    { label: 'Master Degree With B.Ed', value: 'Master Degree With B.Ed' },
+    { label: 'Degree With B.Ed', value: 'Degree With B.Ed' },
+    { label: 'Degree', value: 'Degree' },
+    { label: 'Diplamo', value: 'Diplamo' },
+    { label: 'ITI', value: 'ITI' },
+    { label: 'HSC', value: 'HSC' },
+    { label: 'SSLC', value: 'SSLC' },
+    { label: 'School', value: 'School' },
+    { label: 'Auditor', value: 'Auditor' },
+    { label: '8th', value: '8th' },
+];
