@@ -25,6 +25,7 @@ import { scale, moderateScale, width } from '../../utils/responsive';
 import Footer from '../../components/Footer';
 import SidebarMenu from '../../components/SidebarMenu';
 import Skeleton from '../../components/Skeleton';
+import PageHeader from '../../components/PageHeader';
 import { getUserProfiles } from '../../services/profileService';
 
 
@@ -284,39 +285,26 @@ const ProfileScreen = () => {
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
 
-            {/* Header Spacer for Status Bar to avoid overlap */}
-            <View style={{ height: insets.top + scale(10) }} />
-
-            <View style={styles.header}>
-                {/* Visual Balancer Removed for Left Alignment */}
-
-                <View style={styles.titleBadgeContainer}>
-                    <LinearGradient
-                        colors={['#ef0d8d', '#ad0761']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.titleBadge}
-                    >
-                        <Icon name="account-multiple" size={scale(18)} color="#FFFFFF" />
-                        <Text style={styles.headerTitle}>{t('MATCHES')}</Text>
-                    </LinearGradient>
-                </View>
-
-                {/* Right Side Actions - Avatar/Menu */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(10) }}>
-                    {isLoggedIn && (
-                        <TouchableOpacity onPress={() => navigation.navigate('Main', { initialTab: 'HOME' })}>
-                            <Image
-                                source={require('../../assets/images/avatar_male.png')}
-                                style={{ width: scale(35), height: scale(35), borderRadius: scale(17.5), borderWidth: scale(1.5), borderColor: '#fff' }}
-                            />
+            <PageHeader
+                title={t('MATCHES')}
+                onBack={() => navigation.navigate('Main', { initialTab: 'HOME' })}
+                icon="account-multiple"
+                rightComponent={
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(10) }}>
+                        {isLoggedIn && (
+                            <TouchableOpacity onPress={() => navigation.navigate('Main', { initialTab: 'HOME' })}>
+                                <Image
+                                    source={require('../../assets/images/avatar_male.jpg')}
+                                    style={{ width: scale(35), height: scale(35), borderRadius: scale(17.5), borderWidth: scale(1.5), borderColor: '#fff' }}
+                                />
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity onPress={() => setMenuVisible(true)}>
+                            <Icon name="menu" size={scale(28)} color="#ad0761" />
                         </TouchableOpacity>
-                    )}
-                    <TouchableOpacity onPress={() => setMenuVisible(true)}>
-                        <Icon name="menu" size={scale(28)} color="#ad0761" />
-                    </TouchableOpacity>
-                </View>
-            </View>
+                    </View>
+                }
+            />
 
             {isLoading ? (
                 <Skeleton type="Profile" />
@@ -379,7 +367,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: scale(15),
         paddingBottom: scale(10),
-        paddingTop: scale(10), // Added explicit top padding since we removed ImageBackground
     },
     backBtn: {
         width: scale(40),

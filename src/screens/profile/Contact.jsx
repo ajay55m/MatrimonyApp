@@ -24,6 +24,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Footer from '../../components/Footer';
 import SidebarMenu from '../../components/SidebarMenu';
 import Skeleton from '../../components/Skeleton';
+import PageHeader from '../../components/PageHeader';
 
 // Translations
 import { TRANSLATIONS } from '../../constants/translations';
@@ -177,40 +178,27 @@ const ContactScreen = ({ navigation }) => {
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
 
-            {/* Header Spacer for Status Bar to avoid overlap */}
-            <View style={{ height: insets.top + 10 }} />
-
-            {/* Redesigned Header to match Profile Screen Style */}
-            <View style={styles.header}>
-                {/* Visual Balancer Removed (Left Alignment) */}
-
-                <View style={styles.titleBadgeContainer}>
-                    <LinearGradient
-                        colors={['#ef0d8d', '#ad0761']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.titleBadge}
-                    >
-                        <Icon name="phone-classic" size={18} color="#FFFFFF" />
-                        <Text style={styles.headerTitle}>{t('CONTACT_US')}</Text>
-                    </LinearGradient>
-                </View>
-
-                {/* Right Side Actions - Avatar/Menu */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    {isLoggedIn && (
-                        <TouchableOpacity onPress={() => navigation.navigate('Main', { initialTab: 'HOME' })}>
-                            <Image
-                                source={require('../../assets/images/avatar_male.png')}
-                                style={{ width: 35, height: 35, borderRadius: 17.5, borderWidth: 1.5, borderColor: '#fff' }}
-                            />
+            {/* Header */}
+            <PageHeader
+                title={t('CONTACT_US')}
+                onBack={() => navigation.navigate('Main', { initialTab: 'HOME' })}
+                icon="phone-classic"
+                rightComponent={
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        {isLoggedIn && (
+                            <TouchableOpacity onPress={() => navigation.navigate('Main', { initialTab: 'HOME' })}>
+                                <Image
+                                    source={require('../../assets/images/avatar_male.jpg')}
+                                    style={{ width: 35, height: 35, borderRadius: 17.5, borderWidth: 1.5, borderColor: '#fff' }}
+                                />
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity onPress={() => setMenuVisible(true)}>
+                            <Icon name="menu" size={28} color="#ad0761" />
                         </TouchableOpacity>
-                    )}
-                    <TouchableOpacity onPress={() => setMenuVisible(true)}>
-                        <Icon name="menu" size={28} color="#ad0761" />
-                    </TouchableOpacity>
-                </View>
-            </View>
+                    </View>
+                }
+            />
 
             {isLoading ? (
                 <Skeleton type="Contact" />

@@ -85,7 +85,7 @@ const SidebarMenu = ({ menuVisible, setMenuVisible, isLoggedIn, onLogout, t, nav
                                 {isLoggedIn && (
                                     <View style={styles.profileSummary}>
                                         <Image
-                                            source={require('../assets/images/avatar_male.png')}
+                                            source={require('../assets/images/avatar_male.jpg')}
                                             style={styles.profileAvatar}
                                         />
                                         <View>

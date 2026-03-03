@@ -18,6 +18,7 @@ import { decodeUTF8String, decodeAllStrings } from '../../utils/utf8Helper';
 import { getLabel, EDUCATION_MAP, OCCUPATION_MAP, RELIGION_MAP, CASTE_MAP, LOCATION_MAP } from '../../utils/dataMappings';
 import { getProfile } from '../../services/profileService';
 import SidebarMenu from '../../components/SidebarMenu';
+import PageHeader from '../../components/PageHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ProfileDetails = () => {
@@ -206,40 +207,29 @@ const ProfileDetails = () => {
     return (
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" translucent={true} backgroundColor="transparent" />
-            <View style={{ height: (StatusBar.currentHeight || 24) + 10 }} />
 
             {/* Header */}
-            <View style={styles.header}>
-                <View style={styles.headerLeftContainer}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Icon name="arrow-left" size={22} color="#ef0d8d" />
-                    </TouchableOpacity>
-                    <LinearGradient
-                        colors={['#ef0d8d', '#ad0761']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.titleBadge}
-                    >
-                        <Icon name="account-details" size={16} color="#FFFFFF" style={{ marginRight: 7 }} />
-                        <Text style={styles.headerTitle}>Profile Details</Text>
-                    </LinearGradient>
-                </View>
-
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    {isLoading && <ActivityIndicator color="#ef0d8d" size="small" />}
-                    {isLoggedIn && (
-                        <TouchableOpacity onPress={() => navigation.navigate('Main', { initialTab: 'HOME' })}>
-                            <Image
-                                source={require('../../assets/images/avatar_male.png')}
-                                style={styles.avatarSmall}
-                            />
+            <PageHeader
+                title="Profile Details"
+                onBack={() => navigation.goBack()}
+                icon="account-details"
+                rightComponent={
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        {isLoading && <ActivityIndicator color="#ef0d8d" size="small" />}
+                        {isLoggedIn && (
+                            <TouchableOpacity onPress={() => navigation.navigate('Main', { initialTab: 'HOME' })}>
+                                <Image
+                                    source={require('../../assets/images/avatar_male.jpg')}
+                                    style={styles.avatarSmall}
+                                />
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuButton}>
+                            <Icon name="menu" size={24} color="#ad0761" />
                         </TouchableOpacity>
-                    )}
-                    <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuButton}>
-                        <Icon name="menu" size={24} color="#ad0761" />
-                    </TouchableOpacity>
-                </View>
-            </View>
+                    </View>
+                }
+            />
 
             <ScrollView
                 style={styles.scrollView}
@@ -421,8 +411,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 15,
-        paddingBottom: 10,
-        paddingTop: 5,
+        paddingBottom: 8,
     },
     headerLeftContainer: {
         flexDirection: 'row',

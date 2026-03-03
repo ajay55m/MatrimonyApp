@@ -19,6 +19,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import { registerUser } from '../../services/authService';
 import { ActivityIndicator } from 'react-native';
 import { STARS } from '../../constants/stars';
+import PageHeader from '../../components/PageHeader';
+import { scale, moderateScale } from '../../utils/responsive';
 import { RELIGIONS } from '../../constants/religions';
 import { RASIS } from '../../constants/rasis';
 import { QUALIFICATIONS } from '../../constants/qualifications';
@@ -106,7 +108,7 @@ const RegistrationScreen = ({ navigation }) => {
         setGeneratedOtp(newOtp);
         // In a real app, this would be sent via SMS/Email
         // For local verification, we show it in an Alert
-        Alert.alert('Verification Code', `Your OTP is: ${newOtp}\n(This is for local testing)`);
+        Alert.alert('சரிபார்ப்பு குறியீடு', `உங்கள் OTP: ${newOtp}\n(இது சோதனைக்காக மட்டுமே)`);
         return newOtp;
     };
 
@@ -279,7 +281,10 @@ const RegistrationScreen = ({ navigation }) => {
     };
 
     const handleSubmit = () => {
-        Alert.alert('வெற்றி!', 'பதிவு முடிந்தது', [{ text: 'சரி', onPress: () => navigation.navigate('Home') }]);
+        navigation.reset({
+            index: 0,
+            routes: [{ name: 'Main', params: { initialTab: 'HOME' } }],
+        });
     };
 
     const handleOtpChange = (index, value) => {
@@ -294,7 +299,7 @@ const RegistrationScreen = ({ navigation }) => {
     const renderTerms = () => (
         <View style={styles.termsContainer}>
             <LinearGradient colors={['#E0F2FE', '#FFFFFF']} style={styles.termsHeaderModern}>
-                <Text style={styles.termsTitleModern}>Terms & Conditions</Text>
+                <Text style={styles.termsTitleModern}>விதிமுறைகள் மற்றும் நிபந்தனைகள்</Text>
             </LinearGradient>
 
             <ScrollView style={styles.termsContent} showsVerticalScrollIndicator={false}>
@@ -327,11 +332,11 @@ const RegistrationScreen = ({ navigation }) => {
 
             <View style={styles.termsButtonContainer}>
                 <TouchableOpacity style={styles.rejectBtnModern} onPress={handleReject}>
-                    <Text style={styles.rejectTextModern}>Reject</Text>
+                    <Text style={styles.rejectTextModern}>நிராகரி</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.acceptBtnModern} onPress={handleAcceptTerms}>
                     <LinearGradient colors={['#EC4899', '#BE185D']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.acceptGradientModern}>
-                        <Text style={styles.acceptTextModern}>Accept</Text>
+                        <Text style={styles.acceptTextModern}>ஏற்கிறேன்</Text>
                         <Icon name="arrow-right" size={20} color="#FFF" />
                     </LinearGradient>
                 </TouchableOpacity>
@@ -830,13 +835,11 @@ const RegistrationScreen = ({ navigation }) => {
 
     return (
         <View style={styles.containerModern}>
-            <LinearGradient colors={['#EC4899', '#BE185D']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.headerModern, { paddingTop: insets.top }]}>
-                <TouchableOpacity onPress={handleBack} style={styles.headerBackModern}>
-                    <Icon name={currentStep === 0 ? "close" : "arrow-left"} size={24} color="#FFF" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitleModern}>Registration</Text>
-                <View style={{ width: 40 }} />
-            </LinearGradient>
+            <PageHeader
+                title={currentStep === 4 ? "பதிவு முடிந்தது" : "Registration"}
+                onBack={currentStep === 4 ? null : handleBack}
+                backIcon={currentStep === 0 ? "close" : "arrow-left"}
+            />
 
             {currentStep === 0 && renderTerms()}
             {(currentStep === 1 || currentStep === 2 || currentStep === 3) && renderFormSheet()}
@@ -855,7 +858,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        paddingBottom: 20,
+        paddingBottom: 15,
         borderBottomLeftRadius: 24,
         borderBottomRightRadius: 24,
     },
@@ -981,7 +984,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF',
         borderTopLeftRadius: 32,
         borderTopRightRadius: 32,
-        marginTop: -20,
+        marginTop: -30,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -4 },
         shadowOpacity: 0.1,

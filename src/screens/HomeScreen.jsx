@@ -40,20 +40,20 @@ const COLORS = {
 // Enhanced Dummy Data (Mock Data remains hardcoded or can be fetched)
 const PROFILES = [
     {
-        id: '1', name: 'J.Jeniharila', age: '28', religion: 'Christian', caste: 'Nadar', job: 'Private', verified: true, img: require('../assets/images/avatar_female.png'),
-        profileId: 'CF7197', dob: '28-03-1996', height: '5 ft - 3 in', fatherName: 'N.P.Jayakanthan', motherName: 'J.S.Ponmani', place: 'Vepalodai', education: 'B.Sc (CS)', income: '10,000'
+        id: '1', name: 'J.ஜெனிஹரிலா', age: '28', religion: 'கிறிஸ்தவர்', caste: 'நாடார்', job: 'தனியார்', verified: true, img: require('../assets/images/avatar_female.jpg'),
+        profileId: 'CF7197', dob: '28-03-1996', height: '5 அடி - 3 அங்', fatherName: 'N.P.ஜெயகாந்தன்', motherName: 'J.S.பொன்மணி', place: 'வேப்பலோடை', education: 'B.Sc (CS)', income: '10,000'
     },
     {
-        id: '2', name: 'T.Bala Saraswathi', age: '35', religion: 'Hindu', caste: 'Nadar', job: 'NoJob', verified: true, img: require('../assets/images/avatar_female.png'),
-        profileId: 'HF6310', dob: '03-11-1989', height: '5 ft --', fatherName: 'P.Thangadurai', motherName: 'T.Panchavarnam', place: 'Kozhuvai', education: 'B.Sc (Maths)', income: '-'
+        id: '2', name: 'T.பால சரஸ்வதி', age: '35', religion: 'இந்து', caste: 'நாடார்', job: 'வேலையில்லை', verified: true, img: require('../assets/images/avatar_female.jpg'),
+        profileId: 'HF6310', dob: '03-11-1989', height: '5 அடி --', fatherName: 'P.தங்கதுரை', motherName: 'T.பஞ்சவர்ணம்', place: 'கொழுவை', education: 'B.Sc (Maths)', income: '-'
     },
     {
-        id: '3', name: 'S.Karthikeyan', age: '28', religion: 'Hindu', caste: 'Nadar', job: 'Engineer', verified: true, img: require('../assets/images/avatar_male.png'),
-        profileId: 'NM1003', dob: '10-05-1995', height: '5 ft - 9 in', fatherName: 'S.Selvam', motherName: 'S.Kavitha', place: 'Madurai', education: 'B.E', income: '40,000'
+        id: '3', name: 'S.கார்த்திகேயன்', age: '28', religion: 'இந்து', caste: 'நாடார்', job: 'பொறியாளர்', verified: true, img: require('../assets/images/avatar_male.jpg'),
+        profileId: 'NM1003', dob: '10-05-1995', height: '5 அடி - 9 அங்', fatherName: 'S.செல்வம்', motherName: 'S.கவிதா', place: 'மதுரை', education: 'B.E', income: '40,000'
     },
     {
-        id: '4', name: 'M.Priya', age: '24', religion: 'Hindu', caste: 'Nadar', job: 'Teacher', verified: true, img: require('../assets/images/avatar_female.png'),
-        profileId: 'NM1004', dob: '15-08-1999', height: '5 ft - 4 in', fatherName: 'M.Mani', motherName: 'M.Selvi', place: 'Tirunelveli', education: 'M.Sc', income: '25,000'
+        id: '4', name: 'M.பிரியா', age: '24', religion: 'இந்து', caste: 'நாடார்', job: 'ஆசிரியர்', verified: true, img: require('../assets/images/avatar_female.jpg'),
+        profileId: 'NM1004', dob: '15-08-1999', height: '5 அடி - 4 அங்', fatherName: 'M.மணி', motherName: 'M.செல்வி', place: 'திருநெல்வேலி', education: 'M.Sc', income: '25,000'
     },
 ];
 

@@ -14,12 +14,15 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
-import { scale, moderateScale } from '../../utils/responsive';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { scale, moderateScale, width } from '../../utils/responsive';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { decodeUTF8String } from '../../utils/utf8Helper';
+import PageHeader from '../../components/PageHeader';
 
 const ViewedProfiles = () => {
     const navigation = useNavigation();
+    const insets = useSafeAreaInsets();
     const [viewedProfiles, setViewedProfiles] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -163,23 +166,11 @@ const ViewedProfiles = () => {
             <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
 
             {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Icon name="arrow-left" size={24} color="#333" />
-                </TouchableOpacity>
-
-                <View style={styles.titleBadgeContainer}>
-                    <LinearGradient
-                        colors={['#ef0d8d', '#ad0761']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.titleBadge}
-                    >
-                        <Icon name="eye" size={scale(18)} color="#FFFFFF" />
-                        <Text style={styles.headerTitle}>Viewed Profiles ({viewedProfiles.length})</Text>
-                    </LinearGradient>
-                </View>
-            </View>
+            <PageHeader
+                title={`Viewed Profiles (${viewedProfiles.length})`}
+                onBack={() => navigation.goBack()}
+                icon="eye"
+            />
 
             {isLoading ? (
                 <View style={styles.centerContainer}>
@@ -211,8 +202,8 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: scale(15),
-        paddingTop: scale(10),
+        paddingHorizontal: scale(15),
+        paddingBottom: scale(10),
         justifyContent: 'space-between',
     },
     backButton: {

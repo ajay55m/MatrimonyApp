@@ -178,7 +178,7 @@ const Dashboard = ({ t }) => {
                                     ? { uri: `https://nadarmahamai.com/uploads/${userData.user_photo}` }
                                     : (userData?.photo_data1
                                         ? { uri: `https://nadarmahamai.com/uploads/${userData.photo_data1}` }
-                                        : require('../assets/images/avatar_male.png'))
+                                        : require('../assets/images/avatar_male.jpg'))
                             }
                             style={styles.headerAvatar}
                             resizeMode="cover"
@@ -288,7 +288,7 @@ const Dashboard = ({ t }) => {
                             ? { uri: `https://nadarmahamai.com/uploads/${userData.user_photo}` }
                             : (userData?.photo_data1
                                 ? { uri: `https://nadarmahamai.com/uploads/${userData.photo_data1}` }
-                                : require('../assets/images/avatar_male.png'))
+                                : require('../assets/images/avatar_male.jpg'))
                     }
                     style={styles.sidebarAvatarImage}
                 />

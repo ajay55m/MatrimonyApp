@@ -14,13 +14,16 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
-import { scale, moderateScale } from '../../utils/responsive';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { scale, moderateScale, width } from '../../utils/responsive';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { decodeUTF8String } from '../../utils/utf8Helper';
 import { getSelectedProfiles } from '../../services/profileService';
+import PageHeader from '../../components/PageHeader';
 
 const SelectedProfiles = () => {
     const navigation = useNavigation();
+    const insets = useSafeAreaInsets();
     const [profiles, setProfiles] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -185,23 +188,11 @@ const SelectedProfiles = () => {
             <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
 
             {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Icon name="arrow-left" size={24} color="#333" />
-                </TouchableOpacity>
-
-                <View style={styles.titleBadgeContainer}>
-                    <LinearGradient
-                        colors={['#ef0d8d', '#ad0761']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.titleBadge}
-                    >
-                        <Icon name="heart" size={scale(18)} color="#FFFFFF" />
-                        <Text style={styles.headerTitle}>Selected Profiles ({profiles.length})</Text>
-                    </LinearGradient>
-                </View>
-            </View>
+            <PageHeader
+                title={`Selected Profiles (${profiles.length})`}
+                onBack={() => navigation.goBack()}
+                icon="heart"
+            />
 
             {isLoading ? (
                 <View style={styles.centerContainer}>
@@ -238,9 +229,9 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: scale(15),
-        paddingTop: scale(10),
-        justifyContent: 'space-between', // Changed to space-between to allow centering or right align effects if needed
+        paddingHorizontal: scale(15),
+        paddingBottom: scale(10),
+        justifyContent: 'space-between',
     },
     backButton: {
         width: scale(40),
